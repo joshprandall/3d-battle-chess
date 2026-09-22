@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {PALETTES} from './pieces.js';
-import {createCharacter,poseCharacter} from './characters.js';
+import {createDuelFighter as createCharacter,poseCharacter} from './combatants.js';
 import {STEP,body,drive,jump,impulse,step,sweptHit,projectile,advanceProjectile,fragments,fightMass,ease} from './combat-physics.js';
 
 // A staged duel with fixed-step momentum, swept weapon/projectile contact,
@@ -37,7 +37,7 @@ export function animateDuel({source,victim,theme='classic',role='p',fxGroup,came
   const light=own(new THREE.Mesh(new THREE.OctahedronGeometry(.11),material(palette.glow,palette.glow)));
   light.position.set(side*2.43,.81,depth*1.23);
  }
- const fighter=createCharacter(attackerData,0,0,theme),defender=createCharacter(defenderData,0,0,theme);
+ const fighter=createCharacter(attackerData,theme),defender=createCharacter(defenderData,theme);
  fighter.scale.setScalar(1.55);defender.scale.setScalar(1.55);arena.add(fighter,defender);
  const a=body({x:-1.24,mass:fightMass(role),radius:.46,drag:5.2});
  const d=body({x:1.24,mass:fightMass(defenderData.t),radius:.49,drag:3.4,bounce:.14});
