@@ -117,7 +117,7 @@ export function poseCharacter(root,p={}){
   leg.hinge.rotation.x=Math.max(0,-step)*.72+brace*.21+fall*.31;
   leg.end.rotation.x=-leg.upper.rotation.x-leg.hinge.rotation.x*.72;
  }
- r.weapon.rotation.x=(p.weapon||0)-coil*.25+attack*.05;
+ r.weapon.rotation.x=(p.weapon||0)*(1-attack)-coil*.25+attack*.05;
 }
 export function weaponPoint(root,target=new THREE.Vector3()){
  const joint=root?.userData.rigV6?.tip;
