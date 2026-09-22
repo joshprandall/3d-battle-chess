@@ -20,7 +20,7 @@ jobs:
           path: artifacts/*.png
           if-no-files-found: ignore
       - name: Package isolated OSU web game
-        run: zip -j artifacts/battle-chess-osu-deploy.zip index.html styles.css battle.js engine.js pieces.js attacks.js
+        run: zip -j artifacts/battle-chess-osu-deploy.zip index.html styles.css battle.js engine.js pieces.js attacks.js characters.js duels.js
       - uses: actions/upload-artifact@v4
         with:
           name: battle-chess-osu-deploy
