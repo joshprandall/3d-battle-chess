@@ -15,6 +15,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: node tests/browser-smoke.mjs
       - run: node tests/character-duels.mjs
+      - run: node tests/v6-fighters.mjs
+      - run: node tests/v6-role-contact.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -22,7 +24,7 @@ jobs:
           path: artifacts/*.png
           if-no-files-found: ignore
       - name: Package isolated OSU web game
-        run: zip -j artifacts/battle-chess-osu-deploy.zip index.html styles.css battle.js engine.js pieces.js attacks.js characters.js combatants.js duels.js duels-physics.js combat-physics.js castle-controls.js
+        run: zip -j artifacts/battle-chess-osu-deploy.zip index.html styles.css battle.js engine.js pieces.js attacks.js characters.js combatants.js duels.js duels-physics.js combat-physics.js castle-controls.js combatants-v6.js duels-v6.js
       - uses: actions/upload-artifact@v4
         with:
           name: battle-chess-osu-deploy

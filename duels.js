@@ -1,2 +1,2 @@
-// Preserve the existing public import while evolving combat independently of chess rules.
-export {animateDuel} from './duels-physics.js';
+// Keep the board's stable duel entry point; only the capture animation changes.
+export {animateDuel} from './duels-v6.js';
