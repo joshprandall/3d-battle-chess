@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {ChessGame,chooseComputerMove} from './engine.js';
-import {PALETTES,createPiece} from './pieces.js';
-import {ATTACK_NAMES,animateCapture} from './attacks.js';
+import {PALETTES} from './pieces.js';
+import {createCharacter} from './characters.js';
+import {animateDuel} from './duels.js';
+import {ATTACK_NAMES} from './attacks.js';
 const $=s=>document.querySelector(s),sceneEl=$('#scene'),logEl=$('#log'),turnEl=$('#turn'),stateEl=$('#state'),game=new ChessGame();
 const themes=PALETTES;
 let theme='classic',selected=null,legal=[],busy=false,soundOn=true,aiTimer=null,generation=0,toastTimer=null,scene,camera,renderer,orbit,boardGroup,pieceGroup,fxGroup;
@@ -23,7 +25,7 @@ function createBoard(){
   sq.position.set(x-3.5,0,y-3.5);sq.userData={square:true,x,y};sq.receiveShadow=true;boardGroup.add(sq)
  }
 }
-function drawPieces(){clearGroup(pieceGroup);for(let y=0;y<8;y++)for(let x=0;x<8;x++)if(game.piece(x,y))pieceGroup.add(createPiece(game.piece(x,y),x,y,theme));highlight()}
+function drawPieces(){clearGroup(pieceGroup);for(let y=0;y<8;y++)for(let x=0;x<8;x++)if(game.piece(x,y))pieceGroup.add(createCharacter(game.piece(x,y),x,y,theme));highlight()}
 function highlight(){for(const o of boardGroup.children)if(o.userData.square){o.material.emissive.setHex(0);o.material.emissiveIntensity=.52;if(selected&&o.userData.x===selected.x&&o.userData.y===selected.y)o.material.emissive.setHex(0xfbbf24);const m=legal.find(m=>m.nx===o.userData.x&&m.ny===o.userData.y);if(m)o.material.emissive.setHex(game.piece(m.nx,m.ny)||game.ep?.x===m.nx&&game.ep?.y===m.ny?0xfb7185:0x2dd4bf)}}
 function renderStatus(){const st=game.status();turnEl.textContent=(game.turn==='w'?'White':'Black')+' to move';stateEl.textContent=st.over?(st.winner?(st.winner==='w'?'White':'Black')+' wins · checkmate':'Draw · '+st.kind):(st.check?'CHECK':'Battle in progress');logEl.replaceChildren(...game.moves.map((move,i)=>{const li=document.createElement('li');li.textContent=(i%2===0?'White · ':'Black · ')+move.notation;return li}));logEl.scrollTop=logEl.scrollHeight;$('#difficulty').disabled=$('#mode').value!=='ai';if(st.over)clearTimeout(aiTimer)}
 function notice(message){const t=$('#toast');t.textContent=message;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500)}
@@ -41,7 +43,7 @@ async function applyMove(m,computer=false,promotion=null){
   const defender=pieceGroup.children.find(o=>o.userData.x===m.nx&&o.userData.y===(enPassant?m.y:m.ny));
   const who={p:'Pawn',n:'Knight',b:'Bishop',r:'Rook',q:'Queen',k:'King'}[p.t];
   stateEl.textContent=who+' '+ATTACK_NAMES[theme][p.t]+'!';
-  await animateCapture({source:attacker,victim:defender,x:m.nx,y:m.ny,theme,role:p.t,fxGroup,reducedMotion,onImpact:()=>sound(theme==='cosmic'?430:theme==='monsters'?125:240)});
+  await animateDuel({source:attacker,victim:defender,x:m.nx,y:m.ny,theme,role:p.t,fxGroup,camera,orbit,reducedMotion,onImpact:()=>sound(theme==='cosmic'?430:theme==='monsters'?125:240)});
  }
  const move=game.move(m.x,m.y,m.nx,m.ny,promotion||'q');
  if(!move){busy=false;renderStatus();return false}
