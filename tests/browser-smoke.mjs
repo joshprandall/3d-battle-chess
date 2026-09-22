@@ -13,6 +13,9 @@ try{
   await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded',timeout:30000});
   await page.waitForFunction(()=>document.querySelector('#scene canvas')&&document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
   assert.equal(await page.locator('#scene canvas').count(),1,'WebGL chessboard canvas exists');
+  assert.equal(await page.locator('#backToProjects').getAttribute('href'),'https://web.engr.oregonstate.edu/~randjosh/projects.html');
+  assert.equal(await page.locator('#backToHome').getAttribute('href'),'https://web.engr.oregonstate.edu/~randjosh/');
+  assert.ok(await page.locator('#backToProjects').isVisible(),'back link visible on desktop');
   mkdirSync('artifacts',{recursive:true});await page.screenshot({path:'artifacts/desktop.png',fullPage:true});
   await page.locator('#moveInput').fill('e2e4');await page.locator('#moveForm button').click();
   await page.waitForFunction(()=>document.querySelectorAll('#log li').length>=2,null,{timeout:45000});
@@ -20,7 +23,16 @@ try{
   await page.locator('#theme').selectOption('arcane');assert.equal(await page.locator('#theme').inputValue(),'arcane');
   await page.setViewportSize({width:390,height:844});await page.locator('#menuBtn').click();
   assert.match(await page.locator('#controls').getAttribute('class'),/open/);
-  await page.locator('#menuBtn').click();await page.screenshot({path:'artifacts/mobile.png',fullPage:true});
+  await page.locator('#menuBtn').click();
+  assert.ok(await page.locator('#backToProjects').isVisible(),'back link visible on mobile');
+  assert.ok(await page.locator('#backToHome').isVisible(),'home link visible on mobile');
+  assert.equal(await page.locator('.site-nav').evaluate(el=>getComputedStyle(el).position),'sticky','return links stay on screen while scrolling');
+  await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));
+  await page.waitForTimeout(200);
+  const rect=await page.locator('.site-nav').boundingBox();
+  assert.ok(rect&&rect.y>=-1&&rect.y<50,'return navigation remains at top after scrolling');
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await page.screenshot({path:'artifacts/mobile.png',fullPage:true});
   assert.deepEqual(errors,[],'no uncaught browser exceptions');
-  console.log('PASS: WebGL render, computer turn, theme switching, mobile controls and browser console');
+  console.log('PASS: WebGL render, computer turn, themes, mobile controls, persistent portfolio links and browser console');
 }finally{await browser?.close();server.kill();}
