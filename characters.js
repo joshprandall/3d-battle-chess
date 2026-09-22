@@ -12,9 +12,9 @@ export function createCharacter(piece,x,y,theme='classic'){
  const root=createPiece(piece,x,y,theme),palette=PALETTES[theme];
  const dark=piece.c==='b',color=dark?palette.b:palette.w;
  const skin=new THREE.MeshStandardMaterial({color,roughness:.64,metalness:theme==='cosmic'?.55:.12});
- const armor=new THREE.MeshStandardMaterial({color:dark?0xaac7db:palette.trim,roughness:.43,metalness:.32});
+ const armor=new THREE.MeshStandardMaterial({color:dark?0x7e9caf:palette.trim,roughness:.43,metalness:.32});
  const face=new THREE.MeshStandardMaterial({color:dark?0xe3f7ff:0x253c54,emissive:theme==='monsters'?palette.glow:0x000000,emissiveIntensity:.17});
- const weaponMat=new THREE.MeshStandardMaterial({color:palette.glow,emissive:palette.glow,emissiveIntensity:theme==='cosmic'?.78:.2,metalness:.5,roughness:.28});
+ const weaponMat=new THREE.MeshStandardMaterial({color:palette.glow,emissive:palette.glow,emissiveIntensity:theme==='cosmic'?.46:.13,metalness:.5,roughness:.28});
  const part=(parent,geometry,material,X=0,Y=0,Z=0)=>{const mesh=new THREE.Mesh(geometry,material);mesh.position.set(X,Y,Z);mesh.castShadow=true;parent.add(mesh);mesh.userData.root=root;return mesh};
  const rig=new THREE.Group();root.add(rig);
  // Distinct roles have distinct proportions; all parts pivot from the shoulder or neck.
