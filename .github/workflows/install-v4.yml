@@ -19,7 +19,7 @@ jobs:
         run: |
           set -euo pipefail
           sha256sum tools/v4-payload*.b64
-          cat tools/v4-payload.b64 tools/v4-payload-1.b64 tools/v4-payload-2.b64 tools/v4-payload-3.b64 >/tmp/chess-payload.b64
+          cat tools/v4-payload.b64 tools/v4-payload-0b.b64 tools/v4-payload-1.b64 tools/v4-payload-2.b64 tools/v4-payload-3.b64 >/tmp/chess-payload.b64
           echo 'f5c150187e7f47efc127057f6308d02b6da51c91070eb7e636351923cc6d4ad3  /tmp/chess-payload.b64' | sha256sum -c -
           base64 -d /tmp/chess-payload.b64 >/tmp/chess-v4-payload.tar.xz
           echo '95fc5d5bfce6806b935b50ed6a4cc973a5b042da7778f89b654eed4d5c0e980d  /tmp/chess-v4-payload.tar.xz' | sha256sum -c -
