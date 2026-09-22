@@ -1,93 +1,104 @@
 import * as THREE from 'three';
 import {PALETTES} from './pieces.js';
-import {poseCharacter} from './characters.js';
+import {createCharacter,poseCharacter} from './characters.js';
 
-const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
-const ease=t=>{t=clamp(t);return t*t*(3-2*t)};
-const ROLE_NAMES={p:'Scout',n:'Rider',b:'Mystic',r:'Guardian',q:'Champion',k:'Sovereign'};
-const MOVES={p:'lunges',n:'leaps',b:'casts',r:'charges',q:'unleashes a finishing strike',k:'delivers a royal blow'};
+const clamp=(x)=>Math.min(1,Math.max(0,x));
+const smooth=(x)=>{x=clamp(x);return x*x*(3-2*x)};
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ROLE={
+ p:{name:'SCOUT',attack:'Low lunge',duration:2600,approach:.73,leap:.04},
+ n:{name:'RIDER',attack:'Leaping strike',duration:2900,approach:.83,leap:.87},
+ b:{name:'MYSTIC',attack:'Arcane bolt',duration:2900,approach:.10,leap:.04},
+ r:{name:'GUARDIAN',attack:'Shield charge',duration:2700,approach:.84,leap:.09},
+ q:{name:'CHAMPION',attack:'Feint and finishing blow',duration:3300,approach:.84,leap:.33},
+ k:{name:'SOVEREIGN',attack:'Royal overhead strike',duration:3050,approach:.78,leap:.13}
+};
+const THEME={classic:'Classic clash',arcane:'Arcane spell',monsters:'Monster ambush',brick:'Brick explosion',cosmic:'Cosmic encounter'};
 
-// Both fighters act in a single three-dimensional encounter. Rules are applied by the caller afterwards.
-export function animateDuel({source,victim,x,y,theme,role,fxGroup,reducedMotion,onImpact,camera,orbit}){
- if(!source||reducedMotion){onImpact?.();return Promise.resolve();}
- const start=source.position.clone(),end=new THREE.Vector3(x-3.5,.08,y-3.5),victimAt=victim?.position.clone()||end.clone();
- const savedCamera=camera?.position.clone(),savedTarget=orbit?.target.clone();
- const focus=end.clone().add(victimAt).multiplyScalar(.5).add(new THREE.Vector3(0,.8,0));
- const camGoal=focus.clone().add(new THREE.Vector3(2.8,3.7,4.1));
- const palette=PALETTES[theme],fx=[],materials=[];
- const glow=new THREE.MeshStandardMaterial({color:palette.glow,emissive:palette.glow,emissiveIntensity:1.7,transparent:true,opacity:1,depthWrite:false});
- const contrast=new THREE.MeshStandardMaterial({color:theme==='monsters'?0xff5f75:theme==='brick'?0xffd69b:0xe7faff,emissive:palette.glow,emissiveIntensity:.55,transparent:true,opacity:1,depthWrite:false});
- materials.push(glow,contrast);
- const add=(geo,mat=glow)=>{const mesh=new THREE.Mesh(geo,mat);fxGroup.add(mesh);fx.push(mesh);return mesh};
- const glyph=add(new THREE.TorusGeometry(.31,.027,6,28));glyph.visible=false;
- const orb=add(theme==='brick'?new THREE.BoxGeometry(.20,.20,.20):new THREE.OctahedronGeometry(.14));orb.visible=false;
- const beam=add(new THREE.CylinderGeometry(.038,.038,1,7),contrast);beam.visible=false;
- const slash=add(new THREE.TorusGeometry(.40,.036,5,22,Math.PI*.78),contrast);slash.visible=false;
- const shards=[];let struck=false,finished=false,skip=false,impactCount=0;
- const distance=start.distanceTo(end),range=role==='b'?.19:role==='q'?.77:role==='k'?.81:.88;
- const advance=role==='b'?range:distance>2.1?Math.max(.82,1-1.0/distance):range;
- const ui=document.createElement('div');ui.className='duel-ui';ui.setAttribute('role','status');
- ui.style.cssText='position:absolute;z-index:4;left:50%;top:8px;transform:translateX(-50%);max-width:calc(100% - 16px);width:max-content;display:flex;align-items:center;gap:9px;border:1px solid #8deeff;background:#071827ee;color:#f2fcff;border-radius:12px;padding:6px 9px;box-shadow:0 10px 35px #0009;font:600 12px system-ui';
- const text=document.createElement('span');text.textContent=`${ROLE_NAMES[role]} ${MOVES[role]} · ${theme==='brick'?'Brick Battle':theme==='cosmic'?'Cosmic War':theme==='arcane'?'Arcane':theme==='monsters'?'Monsters':'Classic'}`;
- const button=document.createElement('button');button.type='button';button.textContent='Skip battle';button.setAttribute('aria-label','Skip capture animation');button.style.cssText='white-space:nowrap;min-height:40px;padding:6px 9px;background:#20465f;border:1px solid #80eaff;border-radius:8px;color:white;font:inherit;cursor:pointer';button.onclick=()=>{skip=true};
- ui.append(text,button);document.querySelector('.stage')?.append(ui);
- const duration=role==='q'?2250:role==='n'?2080:role==='b'?2070:1950;
- if(orbit)orbit.enabled=false;
- function hit(){if(struck)return;struck=true;impactCount++;onImpact?.();
-  glyph.visible=true;glyph.position.copy(victimAt).add(new THREE.Vector3(0,.82,0));glyph.rotation.x=Math.PI/2;
-  slash.visible=theme==='monsters'||theme==='classic';slash.position.copy(victimAt).add(new THREE.Vector3(0,1.05,.12));
-  for(let i=0;i<(theme==='brick'?22:13);i++){
-   const size=.045+Math.random()*.08;
-   const geo=theme==='brick'?new THREE.BoxGeometry(size*1.8,size*1.8,size*1.8):theme==='cosmic'?new THREE.OctahedronGeometry(size):theme==='arcane'?new THREE.TetrahedronGeometry(size):new THREE.SphereGeometry(size,5,4);
-   const part=add(geo,i%3?glow:contrast);part.position.copy(victimAt).add(new THREE.Vector3(0,.77,0));
-   shards.push({part,velocity:new THREE.Vector3((Math.random()-.5)*.13,.06+Math.random()*.12,(Math.random()-.5)*.13)});
-  }
+// A reusable close-up arena: the real board and the game state stay untouched
+// until the entire battle completes. There is no second WebGL context on phones.
+export function animateDuel({source,victim,theme='classic',role='p',fxGroup,camera,orbit,boardGroup,pieceGroup,reducedMotion=false,onImpact}){
+ if(!source||!victim||reducedMotion){onImpact?.();return Promise.resolve({impacts:1,skipped:!!reducedMotion});}
+ const spec=ROLE[role]||ROLE.p,palette=PALETTES[theme]||PALETTES.classic;
+ const from={t:source.userData.role,c:source.userData.side};
+ const to={t:victim.userData.role,c:victim.userData.side};
+ const oldCamera=camera.position.clone(),oldTarget=orbit.target.clone();
+ const oldOrbit=orbit.enabled,oldBoard=boardGroup.visible,oldPieces=pieceGroup.visible;
+ const arena=new THREE.Group();arena.name='capture-duel-arena';fxGroup.add(arena);
+ const owned=[];const own=(mesh)=>{arena.add(mesh);owned.push(mesh);return mesh};
+ const mat=(color,emissive=0,alpha=1)=>new THREE.MeshStandardMaterial({color,roughness:.55,metalness:.19,emissive,emissiveIntensity:emissive?.8:0,transparent:alpha<1,opacity:alpha,depthWrite:alpha===1});
+ const floor=own(new THREE.Mesh(new THREE.CylinderGeometry(2.95,3.03,.13,48),mat(theme==='monsters'?0x243529:theme==='cosmic'?0x15263b:0x263542)));
+ floor.position.y=-.12;floor.receiveShadow=true;
+ const ring=own(new THREE.Mesh(new THREE.TorusGeometry(2.62,.035,6,72),mat(palette.glow,palette.glow)));
+ ring.rotation.x=Math.PI/2;ring.position.y=-.035;
+ const fighter=createCharacter(from,0,0,theme),defender=createCharacter(to,0,0,theme);
+ fighter.scale.setScalar(1.65);defender.scale.setScalar(1.65);
+ arena.add(fighter,defender);
+ const LEFT=new THREE.Vector3(-1.18,.09,0),RIGHT=new THREE.Vector3(1.18,.09,0);
+ const flash=new THREE.PointLight(palette.glow,0,6);flash.position.set(.55,1.05,.3);arena.add(flash);
+ const fxMat=mat(palette.glow,palette.glow,.95),accentMat=mat(theme==='monsters'?0xff8c75:theme==='brick'?0xf9c577:0xdaf7ff,palette.glow,.95);
+ const impactRing=own(new THREE.Mesh(new THREE.TorusGeometry(.52,.039,7,36),accentMat));impactRing.position.set(.63,1,.2);impactRing.visible=false;
+ const projectile=own(new THREE.Mesh(theme==='brick'?new THREE.BoxGeometry(.20,.20,.20):new THREE.OctahedronGeometry(.16),fxMat));projectile.visible=false;
+ const beam=own(new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,1,8),accentMat));beam.visible=false;
+ const particleGeometry=theme==='brick'?new THREE.BoxGeometry(.11,.11,.11):theme==='arcane'?new THREE.TetrahedronGeometry(.075):theme==='cosmic'?new THREE.OctahedronGeometry(.085):new THREE.SphereGeometry(.075,5,4);
+ const bits=[];
+ for(let i=0;i<(theme==='brick'?24:16);i++){
+  const mesh=new THREE.Mesh(particleGeometry,i%3?fxMat:accentMat);mesh.visible=false;arena.add(mesh);const angle=(i*2.39996)%(Math.PI*2);
+  bits.push({mesh,dir:new THREE.Vector3(Math.cos(angle),.32+((i*7)%9)/16,Math.sin(angle))});
  }
- function restore(){if(finished)return;finished=true;
-  if(!struck)hit();
-  source.position.copy(start);source.scale.setScalar(1);source.rotation.set(0,source.userData.side==='w'?0:Math.PI,0);
-  if(victim){victim.position.copy(victimAt);victim.rotation.set(0,victim.userData.side==='w'?0:Math.PI,0);victim.scale.setScalar(1)}
-  poseCharacter(source);poseCharacter(victim);
-  if(camera&&savedCamera)camera.position.copy(savedCamera);
-  if(orbit){if(savedTarget)orbit.target.copy(savedTarget);orbit.enabled=true;orbit.update()}
-  for(const mesh of fx){fxGroup.remove(mesh);mesh.geometry.dispose()}
-  for(const mat of materials)mat.dispose();ui.remove();
+ const stage=document.querySelector('.stage');const ui=document.createElement('div');ui.className='duel-ui';
+ ui.style.cssText='position:absolute;inset:0;z-index:8;pointer-events:none;color:#f4f7ff;font:600 14px system-ui;text-shadow:0 2px 5px #000;';
+ const header=document.createElement('div');header.style.cssText='position:absolute;top:9px;left:9px;right:9px;display:flex;align-items:center;gap:8px;justify-content:space-between';
+ const label=document.createElement('span');label.textContent=`${THEME[theme]} · ${spec.name}`;label.style.cssText='background:#091723f0;border:1px solid #7399b6;padding:9px 10px;border-radius:10px';
+ const skip=document.createElement('button');skip.type='button';skip.textContent='Skip battle';skip.setAttribute('aria-label','Skip capture animation');skip.style.cssText='pointer-events:auto;min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid #9be4fb;background:#16364e;color:white;font:600 13px system-ui';
+ header.append(label,skip);ui.append(header);
+ const caption=document.createElement('div');caption.setAttribute('aria-live','polite');caption.style.cssText='position:absolute;bottom:62px;left:50%;transform:translateX(-50%);max-width:calc(100% - 24px);min-width:min(260px,90%);text-align:center;background:#081623e8;border:1px solid #496c84;border-radius:10px;padding:9px';caption.textContent='The defenders prepare…';ui.append(caption);stage?.append(ui);
+ if(stage&&matchMedia('(max-width:850px)').matches){stage.style.scrollMarginTop='64px';stage.scrollIntoView({block:'start',behavior:'auto'});}
+ let skipped=false,hit=false,done=false;skip.onclick=()=>{skipped=true};
+ boardGroup.visible=false;pieceGroup.visible=false;orbit.enabled=false;
+ const cameraGoal=new THREE.Vector3(0,2.55,5.25),targetGoal=new THREE.Vector3(0,.98,0);
+ function impact(){if(hit)return;hit=true;onImpact?.();impactRing.visible=true;for(const bit of bits)bit.mesh.visible=true;caption.textContent=theme==='brick'?'Pieces scatter across the arena!':theme==='arcane'?'The spell breaks the defense!':theme==='cosmic'?'Direct hit!':'The defender falls!';}
+ function cleanup(){if(done)return;done=true;if(!hit)impact();
+  boardGroup.visible=oldBoard;pieceGroup.visible=oldPieces;orbit.enabled=oldOrbit;
+  camera.position.copy(oldCamera);orbit.target.copy(oldTarget);orbit.update();
+  fxGroup.remove(arena);ui.remove();const geometries=new Set(),materials=new Set();
+  arena.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>materials.add(m))});
+  for(const g of geometries)g.dispose();for(const m of materials)m.dispose();
  }
  return new Promise(resolve=>{
-  let startTime=null;
-  const frame=now=>{
-   if(startTime===null)startTime=now;
-   const t=skip?1:clamp((now-startTime)/duration),charge=ease((t-.16)/.40),reaction=ease((t-.53)/.27),back=ease((t-.76)/.24),wind=ease(t/.20);
-   source.position.copy(start).lerp(end,charge*advance);
-   source.position.y+=role==='n'?Math.sin(charge*Math.PI)*1.02:role==='q'?Math.sin(charge*Math.PI)*.37:role==='r'?Math.sin(charge*Math.PI)*.14:Math.sin(charge*Math.PI)*.19;
-   source.rotation.y=(source.userData.side==='w'?0:Math.PI)+(role==='q'?charge*Math.PI*.64:0);
-   source.rotation.z=(role==='r'?-.15:role==='p'?-.13:0)*Math.sin(charge*Math.PI);
-   poseCharacter(source,{lean:-.23*wind+.59*charge-.35*back,head:-.09*wind,guard:-.62*wind+.85*reaction,left:.25*wind,swing:-1.45*wind+2.18*charge-.73*reaction,step:Math.sin(charge*Math.PI*3)*.43,weapon:role==='n'?-.5*charge:0});
-   if(victim){
-    victim.position.copy(victimAt);victim.position.y+=Math.sin(wind*Math.PI)*.045-reaction*.23;
-    victim.position.addScaledVector(new THREE.Vector3(end.x-start.x,0,end.z-start.z).normalize(),reaction*.12);
-    victim.rotation.z=reaction*.42;
-    victim.scale.setScalar(Math.max(.08,1-ease((t-.70)/.22)*.92));
-    poseCharacter(victim,{lean:.24*wind+.58*reaction,head:-.26*reaction,guard:-1.0*wind+1.4*reaction,left:-.28*wind,right:.4*reaction,step:reaction*.48});
+  let start=null,lastPhase='';
+  function frame(now){if(start===null)start=now;const t=skipped?1:clamp((now-start)/spec.duration);
+   const anticipation=smooth(t/.19),drive=smooth((t-.21)/.29),reaction=smooth((t-.55)/.19),fall=smooth((t-.72)/.17);
+   if(t<.21&&lastPhase!=='guard'){caption.textContent='The defender raises a guard…';lastPhase='guard'}
+   else if(t>=.21&&t<.55&&lastPhase!=='attack'){caption.textContent=spec.attack+'!';lastPhase='attack'}
+   fighter.position.copy(LEFT);defender.position.copy(RIGHT);
+   fighter.rotation.set(0,Math.PI*.36,0);defender.rotation.set(0,-Math.PI*.36,0);
+   if(role==='b'){fighter.position.x+=drive*.14;fighter.position.y+=Math.sin(drive*Math.PI)*.09;}
+   else if(role==='q'){fighter.position.x+=drive*spec.approach*2.15;fighter.position.z=Math.sin(drive*Math.PI*2)*.27;fighter.position.y+=Math.sin(drive*Math.PI)*spec.leap;fighter.rotation.y+=Math.sin(drive*Math.PI*1.3)*.65;}
+   else {fighter.position.x+=drive*spec.approach*2.1;fighter.position.y+=Math.sin(drive*Math.PI)*spec.leap;}
+   fighter.rotation.z=role==='r'?-drive*.17:role==='p'?drive*.12:0;
+   poseCharacter(fighter,{lean:-.24*anticipation+.48*drive-.24*reaction,head:-.15*anticipation,guard:-.65*anticipation,left:.25*drive,swing:-1.45*anticipation+2.45*drive-.8*reaction,step:Math.sin(drive*Math.PI*3)*.56,weapon:role==='k'?-1.1*anticipation+1.6*drive:role==='n'?-.62*drive:0});
+   defender.position.x+=reaction*.20;defender.position.y-=fall*.28;
+   defender.rotation.z=-reaction*.18-fall*.77;
+   defender.scale.set(1.65*(1+.10*reaction),1.65*(1-.27*reaction),1.65);
+   if(fall>.65)defender.scale.multiplyScalar(Math.max(.06,1-smooth((t-.83)/.13)*.92));
+   poseCharacter(defender,{lean:.15*anticipation+.69*reaction,head:-.34*reaction,guard:-1.2*anticipation+1.6*reaction,left:-.32*anticipation,right:.55*reaction,step:reaction*.42});
+   camera.position.copy(oldCamera).lerp(cameraGoal,smooth(t/.20));
+   camera.position.x+=Math.sin(t*1.9)*.20+Math.sin(t*83)*(.045*(1-smooth((t-.62)/.12))*reaction);
+   camera.position.z-=smooth((t-.23)/.36)*.36;
+   orbit.target.copy(oldTarget).lerp(targetGoal,smooth(t/.20));camera.lookAt(orbit.target);
+   const ranged=role==='b'||theme==='cosmic'||theme==='arcane';
+   projectile.visible=ranged&&t>.24&&t<.55;
+   if(projectile.visible){projectile.position.set(lerp(-.83,.68,smooth((t-.27)/.28)),1.06+Math.sin(t*28)*.07,.20);projectile.rotation.y+=.10;projectile.rotation.z+=.08;}
+   beam.visible=(role==='b'||theme==='cosmic')&&t>.40&&t<.56;
+   if(beam.visible){beam.position.set(-.07,1.02,.21);beam.rotation.z=Math.PI/2;beam.scale.y=1.64;}
+   if(t>=.55)impact();
+   flash.intensity=hit?4.2*(1-smooth((t-.55)/.14)):0;
+   if(hit){const spread=smooth((t-.55)/.41);impactRing.scale.setScalar(1+spread*2.5);impactRing.material.opacity=Math.max(.02,1-spread);
+    for(const bit of bits){bit.mesh.position.set(.67+bit.dir.x*spread*1.45,1.02+bit.dir.y*spread*1.45-spread*spread*1.8,.10+bit.dir.z*spread*1.15);bit.mesh.rotation.set(spread*7,spread*11,spread*5);bit.mesh.scale.setScalar(1-spread*.7);}
    }
-   // A staged camera starts wide, moves to the clash, then returns to the exact previous view.
-   if(camera&&orbit&&savedCamera&&savedTarget){
-    const push=ease(t/.33)*(1-ease((t-.72)/.28));
-    camera.position.copy(savedCamera).lerp(camGoal,push);
-    orbit.target.copy(savedTarget).lerp(focus,push);
-    camera.lookAt(orbit.target);
-   }
-   const magic=role==='b'||theme==='arcane'||theme==='cosmic';
-   orb.visible=magic&&t>.18&&t<.60;
-   if(orb.visible){orb.position.copy(start).lerp(victimAt,ease((t-.18)/.42)).add(new THREE.Vector3(0,.95+Math.sin(t*Math.PI)*.22,0));orb.rotation.x+=.17;orb.rotation.z+=.11;}
-   beam.visible=(role==='b'||theme==='cosmic')&&t>.31&&t<.57;
-   if(beam.visible){const a=source.position.clone().add(new THREE.Vector3(0,1,.2)),b=victimAt.clone().add(new THREE.Vector3(0,.95,0)),v=b.clone().sub(a);beam.position.copy(a).addScaledVector(v,.5);beam.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.clone().normalize());beam.scale.y=v.length();}
-   if(t>=.56)hit();
-   if(struck){glyph.scale.setScalar(1+reaction*1.8);glow.opacity=Math.max(.04,1-reaction*.85);contrast.opacity=Math.max(.04,1-reaction*.8);slash.rotation.z+=.15;
-    for(const f of shards){f.part.position.addScaledVector(f.velocity,skip?4:1);f.velocity.y-=theme==='brick'?.009:.006;f.part.rotation.x+=.15;f.part.scale.multiplyScalar(.98)}
-   }
-   if(t<1)requestAnimationFrame(frame);else{restore();resolve({impacts:impactCount,skipped:skip})}
-  };
+   if(t<1)requestAnimationFrame(frame);else{cleanup();resolve({impacts:1,skipped})}
+  }
   requestAnimationFrame(frame);
  });
 }

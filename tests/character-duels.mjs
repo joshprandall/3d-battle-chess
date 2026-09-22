@@ -27,11 +27,24 @@ try{
  await move('e4d5');
  await page.locator('.duel-ui button').waitFor({timeout:10000});
  assert.equal(await page.locator('#log li').count(),2,'chess state waits until battle completes');
- await page.locator('.duel-ui button').click({force:true});
+ mkdirSync('artifacts',{recursive:true});
+ await delay(1050);
+ await page.screenshot({path:'artifacts/character-duel-midfight-mobile.png'});
+ await page.locator('.duel-ui button').click();
  await page.waitForFunction(()=>document.querySelectorAll('#log li').length===3,{timeout:10000});
  assert.equal(await page.locator('.duel-ui').count(),0,'battle UI cleans up after skip');
  assert.equal(await page.locator('#turn').textContent(),'Black to move');
- mkdirSync('artifacts',{recursive:true});await page.screenshot({path:'artifacts/character-duel-mobile.png'});
+ await page.screenshot({path:'artifacts/character-duel-mobile.png'});
+ await page.locator('#menuBtn').click();await page.locator('#newGame').click();await page.locator('#menuBtn').click();
+ assert.equal(await page.locator('#moveForm').evaluate(form=>form.noValidate),true,'short castle notation bypasses HTML minlength');
+ let count=0;
+ for(const notation of ['e2e4','e7e5','g1f3','b8c6','f1e2','g8f6']){
+  await move(notation);count++;
+  await page.waitForFunction(n=>document.querySelectorAll('#log li').length===n,count,{timeout:12000}).catch(async err=>{throw Error(`${notation}: ${await page.locator('#toast').textContent()} | ${await page.locator('#turn').textContent()} | ${await page.locator('#log').innerText()} | ${err.message}`)});
+ }
+ await move('O-O');
+ await page.waitForFunction(()=>document.querySelectorAll('#log li').length===7,null,{timeout:12000}).catch(async err=>{throw Error(`Castle: ${await page.locator('#toast').textContent()} | ${await page.locator('#turn').textContent()} | ${await page.locator('#log').innerText()} | ${err.message}`)});
+ assert.match(await page.locator('#log li').last().textContent(),/O-O/,'mobile keyboard castling succeeds after clearing path');
  assert.deepEqual(errors,[],'no uncaught browser exceptions');
- console.log('PASS: 30 articulated characters, visible two-sided cinematic, skippable capture, correct chess state, mobile');
+ console.log('PASS: 30 character rigs, unobstructed mobile Skip battle, correct capture, O-O castling through UI');
 }finally{await browser?.close();server.kill();}
