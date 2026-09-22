@@ -30,22 +30,21 @@ try{
  mkdirSync('artifacts',{recursive:true});
  await delay(1050);
  await page.screenshot({path:'artifacts/character-duel-midfight-mobile.png'});
- await page.locator('.duel-ui button').click({force:true});
+ await page.locator('.duel-ui button').click();
  await page.waitForFunction(()=>document.querySelectorAll('#log li').length===3,{timeout:10000});
  assert.equal(await page.locator('.duel-ui').count(),0,'battle UI cleans up after skip');
  assert.equal(await page.locator('#turn').textContent(),'Black to move');
  await page.screenshot({path:'artifacts/character-duel-mobile.png'});
  await page.locator('#menuBtn').click();await page.locator('#newGame').click();await page.locator('#menuBtn').click();
- console.log('New game mode',await page.locator('#mode').inputValue(),'turn',await page.locator('#turn').textContent(),'moves',await page.locator('#log li').count());
+ assert.equal(await page.locator('#moveForm').evaluate(form=>form.noValidate),true,'short castle notation bypasses HTML minlength');
  let count=0;
  for(const notation of ['e2e4','e7e5','g1f3','b8c6','f1e2','g8f6']){
   await move(notation);count++;
   await page.waitForFunction(n=>document.querySelectorAll('#log li').length===n,count,{timeout:12000}).catch(async err=>{throw Error(`${notation}: ${await page.locator('#toast').textContent()} | ${await page.locator('#turn').textContent()} | ${await page.locator('#log').innerText()} | ${err.message}`)});
  }
- console.log('Pre-castle',await page.locator('#turn').textContent(),await page.locator('#mode').inputValue());
  await move('O-O');
  await page.waitForFunction(()=>document.querySelectorAll('#log li').length===7,null,{timeout:12000}).catch(async err=>{throw Error(`Castle: ${await page.locator('#toast').textContent()} | ${await page.locator('#turn').textContent()} | ${await page.locator('#log').innerText()} | ${err.message}`)});
  assert.match(await page.locator('#log li').last().textContent(),/O-O/,'mobile keyboard castling succeeds after clearing path');
  assert.deepEqual(errors,[],'no uncaught browser exceptions');
- console.log('PASS: 30 character rigs, visible skippable duel, castling through mobile UI, legal chess state');
+ console.log('PASS: 30 character rigs, unobstructed mobile Skip battle, correct capture, O-O castling through UI');
 }finally{await browser?.close();server.kill();}
