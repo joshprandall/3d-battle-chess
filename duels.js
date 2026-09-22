@@ -53,7 +53,7 @@ export function animateDuel({source,victim,theme='classic',role='p',fxGroup,came
  const skip=document.createElement('button');skip.type='button';skip.textContent='Skip battle';skip.setAttribute('aria-label','Skip capture animation');skip.style.cssText='pointer-events:auto;min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid #9be4fb;background:#16364e;color:white;font:600 13px system-ui';
  header.append(label,skip);ui.append(header);
  const caption=document.createElement('div');caption.setAttribute('aria-live','polite');caption.style.cssText='position:absolute;bottom:62px;left:50%;transform:translateX(-50%);max-width:calc(100% - 24px);min-width:min(260px,90%);text-align:center;background:#081623e8;border:1px solid #496c84;border-radius:10px;padding:9px';caption.textContent='The defenders prepare…';ui.append(caption);stage?.append(ui);
- if(stage&&matchMedia('(max-width:850px)').matches)stage.scrollIntoView({block:'start',behavior:'auto'});
+ if(stage&&matchMedia('(max-width:850px)').matches){stage.style.scrollMarginTop='64px';stage.scrollIntoView({block:'start',behavior:'auto'});}
  let skipped=false,hit=false,done=false;skip.onclick=()=>{skipped=true};
  boardGroup.visible=false;pieceGroup.visible=false;orbit.enabled=false;
  const cameraGoal=new THREE.Vector3(0,2.55,5.25),targetGoal=new THREE.Vector3(0,.98,0);
