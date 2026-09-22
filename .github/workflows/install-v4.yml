@@ -15,9 +15,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify payload and install only intended files
+      - name: Verify and install scoped source files
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          s=Path('tools/v4-payload.b64').read_text()
+          print('PAYLOAD LENGTH',len(s),'MOD4',len(s)%4)
+          print('PAYLOAD SHA256',hashlib.sha256(s.encode()).hexdigest())
+          print('INVALID CHARS',[(i,repr(c)) for i,c in enumerate(s) if c not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=\n\r'][:10])
+          print('PAYLOAD TAIL',repr(s[-36:]))
+          PY
           base64 -d tools/v4-payload.b64 > /tmp/chess-v4-payload.tar.xz
           echo '95fc5d5bfce6806b935b50ed6a4cc973a5b042da7778f89b654eed4d5c0e980d  /tmp/chess-v4-payload.tar.xz' | sha256sum -c -
           tar -tJf /tmp/chess-v4-payload.tar.xz
@@ -27,11 +36,11 @@ jobs:
           node --check duels.js
           node --check castle-controls.js
           node --test tests/castling-ui.test.mjs
-      - name: Commit scoped v4 source update
+      - name: Commit verified v4 source
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add battle.js duels.js castle-controls.js tests/castling-ui.test.mjs tools/v4-payload.b64 .github/workflows/install-v4.yml
-          git commit -m 'Improve castling input and stage cinematic two-character battles'
+          git commit -m 'Improve castling input and stage two-character battles'
           git push origin HEAD:feature/castling-cinematic-v4
