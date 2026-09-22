@@ -13,3 +13,9 @@ jobs:
       - run: npm install --no-save playwright@1.55.0
       - run: npx playwright install --with-deps chromium
       - run: node tests/browser-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: battle-chess-screenshots
+          path: artifacts/
+          if-no-files-found: ignore
