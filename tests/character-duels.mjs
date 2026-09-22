@@ -13,14 +13,17 @@ try{
  await page.goto('http://127.0.0.1:8766/',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  const roles=await page.evaluate(async()=>{
-  const {createCharacter,poseCharacter}=await import('./characters.js');const roles=[];
+  const {createCharacter,poseCharacter}=await import('./characters.js');const {createDuelFighter}=await import('./combatants.js');const roles=[];
   for(const theme of ['classic','arcane','monsters','brick','cosmic'])for(const t of ['p','n','b','r','q','k']){
-   const o=createCharacter({t,c:'w'},0,0,theme);if(!o.userData.rig?.right||o.userData.rig.legs.length!==2)throw Error(`rig missing ${theme} ${t}`);
-   poseCharacter(o,{swing:-1,step:.4});if(o.userData.rig.right.rotation.x!==-1)throw Error(`joint missing ${theme} ${t}`);
-   o.traverse(m=>{m.geometry?.dispose();m.material?.dispose()});roles.push(`${theme}:${t}`);
+   const board=createCharacter({t,c:'w'},0,0,theme);if(!board.userData.rig?.right||board.userData.rig.legs.length!==2)throw Error(`rig missing ${theme} ${t}`);
+   poseCharacter(board,{swing:-1,step:.4});if(board.userData.rig.right.rotation.x!==-1)throw Error(`joint missing ${theme} ${t}`);
+   board.traverse(m=>{m.geometry?.dispose();m.material?.dispose()});
+   const fighter=createDuelFighter({t,c:'w'},theme);const rig=fighter.userData.rig.torso.parent;
+   if(!fighter.userData.duelFighter||fighter.children.filter(c=>c.visible).length!==1||!rig.visible||fighter.userData.rig.legs.length!==2)throw Error(`Arena fighter missing or statue visible: ${theme} ${t}`);
+   fighter.traverse(m=>{m.geometry?.dispose();m.material?.dispose()});roles.push(`${theme}:${t}`);
   }return roles;
  });
- assert.equal(roles.length,30,'all 30 combinations have animated joints');
+ assert.equal(roles.length,30,'all 30 combinations have independent, articulated arena fighters');
  await page.locator('#menuBtn').click();await page.locator('#mode').selectOption('local');await page.locator('#menuBtn').click();
  const move=async text=>{await page.locator('#moveInput').fill(text);await page.locator('#moveForm button').click()};
  await move('e2e4');await move('d7d5');
@@ -46,5 +49,5 @@ try{
  await page.waitForFunction(()=>document.querySelectorAll('#log li').length===7,null,{timeout:12000}).catch(async err=>{throw Error(`Castle: ${await page.locator('#toast').textContent()} | ${await page.locator('#turn').textContent()} | ${await page.locator('#log').innerText()} | ${err.message}`)});
  assert.match(await page.locator('#log li').last().textContent(),/O-O/,'mobile keyboard castling succeeds after clearing path');
  assert.deepEqual(errors,[],'no uncaught browser exceptions');
- console.log('PASS: 30 character rigs, unobstructed mobile Skip battle, correct capture, O-O castling through UI');
+ console.log('PASS: 30 distinct arena rigs, mobile Skip battle, correct capture, O-O castling through UI');
 }finally{await browser?.close();server.kill();}
