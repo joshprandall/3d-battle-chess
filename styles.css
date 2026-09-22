@@ -6,3 +6,9 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 284px;min-height:calc(100d
 @media(max-width:850px){main{grid-template-columns:1fr;grid-template-rows:minmax(480px,68dvh) auto}.stage{min-height:480px}.panel{border-left:0;border-top:1px solid #26384a}.panel #log{max-height:180px}}
 @media(max-width:520px){.topbar{min-height:64px}.topbar p{display:none}.stage{min-height:445px}.hud{font-size:.73rem;left:8px;right:8px;bottom:8px}.hud span{padding:7px 9px}.panel{padding:14px}.menu{font-size:.9rem}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+/* Always-visible exit controls: separate from the collapsible chess controls. */
+.site-nav{position:sticky;top:0;z-index:12;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px clamp(12px,2vw,28px);padding-top:max(8px,env(safe-area-inset-top));background:#091b29;border-bottom:1px solid #38516a;box-shadow:0 2px 10px #0004}
+.site-nav a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 13px;border:1px solid #3c667b;border-radius:10px;color:#e9f9ff;background:#173448;text-decoration:none;font-size:.88rem;font-weight:600;white-space:nowrap}
+.site-nav a:first-child{background:#1a4555;border-color:#67e8f9;color:#f3ffff}
+.site-nav a:hover,.site-nav a:focus-visible{border-color:#a5f3fc;outline:2px solid #a5f3fc;outline-offset:2px;background:#255268}
+@media(max-width:390px){.site-nav{gap:6px;padding-left:8px;padding-right:8px}.site-nav a{font-size:.78rem;padding:8px 9px}}
