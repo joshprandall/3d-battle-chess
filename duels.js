@@ -27,11 +27,12 @@ export function animateDuel({source,victim,theme='classic',role='p',fxGroup,came
  const arena=new THREE.Group();arena.name='capture-duel-arena';fxGroup.add(arena);
  const owned=[];const own=(mesh)=>{arena.add(mesh);owned.push(mesh);return mesh};
  const mat=(color,emissive=0,alpha=1)=>new THREE.MeshStandardMaterial({color,roughness:.55,metalness:.19,emissive,emissiveIntensity:emissive?.8:0,transparent:alpha<1,opacity:alpha,depthWrite:alpha===1});
- const floor=own(new THREE.Mesh(new THREE.CylinderGeometry(3.4,3.5,.13,48),mat(theme==='monsters'?0x243529:theme==='cosmic'?0x15263b:0x263542)));
+ const floor=own(new THREE.Mesh(new THREE.CylinderGeometry(2.95,3.03,.13,48),mat(theme==='monsters'?0x243529:theme==='cosmic'?0x15263b:0x263542)));
  floor.position.y=-.12;floor.receiveShadow=true;
- const ring=own(new THREE.Mesh(new THREE.TorusGeometry(2.72,.035,6,72),mat(palette.glow,palette.glow)));
+ const ring=own(new THREE.Mesh(new THREE.TorusGeometry(2.62,.035,6,72),mat(palette.glow,palette.glow)));
  ring.rotation.x=Math.PI/2;ring.position.y=-.035;
  const fighter=createCharacter(from,0,0,theme),defender=createCharacter(to,0,0,theme);
+ fighter.scale.setScalar(1.65);defender.scale.setScalar(1.65);
  arena.add(fighter,defender);
  const LEFT=new THREE.Vector3(-1.18,.09,0),RIGHT=new THREE.Vector3(1.18,.09,0);
  const flash=new THREE.PointLight(palette.glow,0,6);flash.position.set(.55,1.05,.3);arena.add(flash);
@@ -52,9 +53,10 @@ export function animateDuel({source,victim,theme='classic',role='p',fxGroup,came
  const skip=document.createElement('button');skip.type='button';skip.textContent='Skip battle';skip.setAttribute('aria-label','Skip capture animation');skip.style.cssText='pointer-events:auto;min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid #9be4fb;background:#16364e;color:white;font:600 13px system-ui';
  header.append(label,skip);ui.append(header);
  const caption=document.createElement('div');caption.setAttribute('aria-live','polite');caption.style.cssText='position:absolute;bottom:62px;left:50%;transform:translateX(-50%);max-width:calc(100% - 24px);min-width:min(260px,90%);text-align:center;background:#081623e8;border:1px solid #496c84;border-radius:10px;padding:9px';caption.textContent='The defenders prepare…';ui.append(caption);stage?.append(ui);
+ if(stage&&matchMedia('(max-width:850px)').matches)stage.scrollIntoView({block:'start',behavior:'auto'});
  let skipped=false,hit=false,done=false;skip.onclick=()=>{skipped=true};
  boardGroup.visible=false;pieceGroup.visible=false;orbit.enabled=false;
- const cameraGoal=new THREE.Vector3(0,2.65,6.0),targetGoal=new THREE.Vector3(0,.98,0);
+ const cameraGoal=new THREE.Vector3(0,2.55,5.25),targetGoal=new THREE.Vector3(0,.98,0);
  function impact(){if(hit)return;hit=true;onImpact?.();impactRing.visible=true;for(const bit of bits)bit.mesh.visible=true;caption.textContent=theme==='brick'?'Pieces scatter across the arena!':theme==='arcane'?'The spell breaks the defense!':theme==='cosmic'?'Direct hit!':'The defender falls!';}
  function cleanup(){if(done)return;done=true;if(!hit)impact();
   boardGroup.visible=oldBoard;pieceGroup.visible=oldPieces;orbit.enabled=oldOrbit;
@@ -78,7 +80,7 @@ export function animateDuel({source,victim,theme='classic',role='p',fxGroup,came
    poseCharacter(fighter,{lean:-.24*anticipation+.48*drive-.24*reaction,head:-.15*anticipation,guard:-.65*anticipation,left:.25*drive,swing:-1.45*anticipation+2.45*drive-.8*reaction,step:Math.sin(drive*Math.PI*3)*.56,weapon:role==='k'?-1.1*anticipation+1.6*drive:role==='n'?-.62*drive:0});
    defender.position.x+=reaction*.20;defender.position.y-=fall*.28;
    defender.rotation.z=-reaction*.18-fall*.77;
-   defender.scale.set(1+.10*reaction,1-.27*reaction,1);
+   defender.scale.set(1.65*(1+.10*reaction),1.65*(1-.27*reaction),1.65);
    if(fall>.65)defender.scale.multiplyScalar(Math.max(.06,1-smooth((t-.83)/.13)*.92));
    poseCharacter(defender,{lean:.15*anticipation+.69*reaction,head:-.34*reaction,guard:-1.2*anticipation+1.6*reaction,left:-.32*anticipation,right:.55*reaction,step:reaction*.42});
    camera.position.copy(oldCamera).lerp(cameraGoal,smooth(t/.20));
