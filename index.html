@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>3D Battle Chess — Joshua Randall</title>
+<meta name="description" content="A responsive browser-based 3D battle chess experience with themed sets and animated captures.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div><h1>3D Battle Chess</h1><p>Strategy becomes spectacle.</p></div>
+  <button id="menuBtn" class="menu" aria-expanded="false">☰</button>
+  <div class="controls" id="controls">
+    <label>Mode <select id="mode"><option value="ai">Vs Computer</option><option value="local">Local 2 Player</option></select></label>
+    <label>Battle Set <select id="theme"><option value="classic">Classic</option><option value="arcane">Arcane</option><option value="monsters">Monsters</option><option value="brick">Brick Battle</option><option value="cosmic">Cosmic War</option></select></label>
+    <label>AI <select id="difficulty"><option value="1">Recruit</option><option value="2" selected>Warrior</option><option value="3">Champion</option></select></label>
+    <button id="newGame">New Game</button><button id="undo">Undo</button><button id="flip">Flip Board</button><button id="sound">Sound: On</button>
+  </div>
+</header>
+<main>
+  <section class="stage">
+    <div id="scene" aria-label="Interactive 3D chess board"></div>
+    <div class="hud"><span id="turn">White to move</span><span id="state">Battle ready</span></div>
+  </section>
+  <aside class="panel">
+    <h2>Battle Log</h2><ol id="log"></ol>
+    <h2>How to Play</h2>
+    <p>Tap or click a piece, then a highlighted square. Drag to orbit the camera; pinch or scroll to zoom.</p>
+    <p>Legal movement, check, checkmate, castling, en passant and promotion are enforced.</p>
+    <div class="legend"><span>● Selected</span><span>● Legal move</span><span>● Capture</span></div>
+  </aside>
+</main>
+<div id="promotion" class="modal hidden"><div class="dialog"><h2>Promote Pawn</h2><div id="promotionChoices"></div></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="game.js"></script>
+</body></html>
