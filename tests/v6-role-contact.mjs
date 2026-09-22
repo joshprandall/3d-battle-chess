@@ -13,7 +13,7 @@ try{
  const results=await page.evaluate(async()=>{
   const THREE=await import('three'),{animateDuel}=await import('./duels-v6.js');
   const original=window.requestAnimationFrame;let virtual=0;
-  window.requestAnimationFrame=callback=>original(()=>{virtual+=45;callback(virtual);});
+  window.requestAnimationFrame=callback=>original(()=>{virtual+=90;callback(virtual);});
   const attempts=[];
   try{
    for(const theme of ['classic','arcane','monsters','brick','cosmic'])for(const role of ['p','n','b','r','q','k']){
@@ -27,6 +27,7 @@ try{
   }finally{window.requestAnimationFrame=original;}
   return attempts;
  });
+ console.log('CONTACT RESULTS',JSON.stringify(results));
  assert.equal(results.length,30);
  for(const value of results){
   assert.equal(value.impacts,1,`${value.theme} ${value.role} missed the target: ${JSON.stringify(value)}`);
