@@ -100,7 +100,7 @@ export function createDuelFighter(piece,theme='classic'){
 // planted soles and spine counter-rotation keep the action readable in profile.
 export function poseCharacter(root,p={}){
  const r=root?.userData.rigV6;if(!r)return;
- const gait=clamp(p.gait??p.step??0,-1,1),attack=clamp(p.attack??0,0,1),coil=clamp(p.coil??0,0,1),fall=clamp(p.fall??0,0,1);
+ const gait=clamp(p.gait??p.step??0,-1,1),attack=clamp(p.attack??0,0,1),coil=clamp(p.coil??0,0,1)*(1-attack),fall=clamp(p.fall??0,0,1);
  r.pelvis.position.y=.76-(p.crouch||0)*.16+Math.abs(gait)*.022;
  r.pelvis.rotation.set((p.lean||0)*.28,0,-fall*.16);
  r.waist.rotation.set(p.lean||0,p.turn||0,(p.roll||0)*.32);
