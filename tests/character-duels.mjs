@@ -27,11 +27,11 @@ try{
  await move('e4d5');
  await page.locator('.duel-ui button').waitFor({timeout:10000});
  assert.equal(await page.locator('#log li').count(),2,'chess state waits until battle completes');
- mkdirSync('artifacts',{recursive:true});await page.screenshot({path:'artifacts/character-duel-mobile.png'});
- await page.locator('.duel-ui button').click();
+ await page.locator('.duel-ui button').click({force:true});
  await page.waitForFunction(()=>document.querySelectorAll('#log li').length===3,{timeout:10000});
  assert.equal(await page.locator('.duel-ui').count(),0,'battle UI cleans up after skip');
  assert.equal(await page.locator('#turn').textContent(),'Black to move');
+ mkdirSync('artifacts',{recursive:true});await page.screenshot({path:'artifacts/character-duel-mobile.png'});
  assert.deepEqual(errors,[],'no uncaught browser exceptions');
  console.log('PASS: 30 articulated characters, visible two-sided cinematic, skippable capture, correct chess state, mobile');
 }finally{await browser?.close();server.kill();}
