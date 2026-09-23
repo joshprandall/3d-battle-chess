@@ -26,12 +26,12 @@ function updateCards(){
  $('#title').textContent=`${a.setLabel}: ${a.name} vs ${d.name}`;
 }
 function resetBattle(){
- if(director){disposeRoot(director.attacker);disposeRoot(director.defender);}
+ if(director){disposeRoot(director.attacker);disposeRoot(director.defender);scene.remove(director.effectsGroup);director.dispose();}
  const theme=$('#set').value,at=$('#attacker').value,dt=$('#defender').value;
  director=new CombatDirectorV8({attacker:{t:at,c:'w'},defender:{t:dt,c:'b'},theme,onContact:event=>{
   const r=event.reaction;$('#telemetry').textContent=`Impact ${event.hit?.volume?.name||'body'} · severity ${r.severity.toFixed(2)} · stagger ${r.stagger.toFixed(2)} · ${r.fall?'defeat fall':'resisted'}`;
  }});
- scene.add(director.attacker,director.defender);playing=false;last=0;$('#phase').textContent='Ready';$('#telemetry').textContent='No impact yet.';updateCards();
+ scene.add(director.attacker,director.defender,director.effectsGroup);playing=false;last=0;$('#phase').textContent='Ready';$('#telemetry').textContent='No impact yet.';updateCards();
 }
 function play(){resetBattle();playing=true;$('#phase').textContent='Engage';}
 function next(){
