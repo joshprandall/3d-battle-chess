@@ -33,9 +33,9 @@ try{
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
 
  assert.ok(await page.locator('#handheldConsole').isVisible(),'handheld console appears automatically on a phone/tablet');
- await page.locator('#mode').selectOption('local');
+ await page.locator('#menuBtn').click();await page.locator('#mode').selectOption('local');await page.locator('#menuBtn').click();
  await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
- await page.locator('#viewToggle').click();
+ await page.locator('#handView').click();
  assert.ok(await page.locator('#board2d').isVisible(),'2D board is visible after toggle');
  assert.equal(await page.locator('#board2d .square2d').count(),64,'2D board renders 64 interactive squares');
  assert.equal(await page.locator('#scene').isVisible(),false,'3D scene hides in 2D mode');
@@ -58,11 +58,13 @@ try{
  const profiles=await page.evaluate(async()=>{const {computerProfile}=await import('./engine.js');return [1,2,3].map(computerProfile)});
  assert.deepEqual(profiles.map(p=>p.name),['Recruit','Warrior','Champion']);
  assert.deepEqual(profiles.map(p=>p.depth),[1,2,3],'computer strength maps to distinct search depths');
+ await page.locator('#menuBtn').click();
  await page.locator('#mode').selectOption('ai');
  await page.locator('#difficulty').selectOption('3');
  assert.match(await page.locator('#toast').textContent(),/Champion/,'strength change is acknowledged in UI');
+ await page.locator('#menuBtn').click();
 
- await page.locator('#fullscreenBtn').click();
+ await page.locator('#handFullscreen').click();
  assert.equal(await page.locator('#gameShell').getAttribute('data-fullscreen-requested'),'yes','fullscreen control requests game-shell fullscreen');
 
  await page.locator('#handView').click();
