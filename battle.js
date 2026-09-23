@@ -14,12 +14,14 @@ const themes=PALETTES;
 let theme='classic',selected=null,legal=[],busy=false,soundOn=true,aiTimer=null,generation=0,toastTimer=null,scene,camera,renderer,orbit,boardGroup,pieceGroup,fxGroup;
 let viewMode='3d',flipped=false,handCursor={x:4,y:6},fullscreenStarted=false,webglReady=false;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const query=new URLSearchParams(location.search),forcedHandheld=query.get('handheld')==='1';
+const query=new URLSearchParams(location.search);
+const handheldDevice=()=>matchMedia('(pointer: coarse)').matches||navigator.maxTouchPoints>0||innerWidth<=900;
+const forcedHandheld=query.get('handheld')==='1'&&handheldDevice();
 const glyphs={w:{p:'♙',n:'♘',b:'♗',r:'♖',q:'♕',k:'♔'},b:{p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'}};
 const roleNames={p:'Pawn',n:'Knight',b:'Bishop',r:'Rook',q:'Queen',k:'King'};
 const coord=(x,y)=>String.fromCharCode(97+x)+(8-y);
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-const handheldActive=()=>forcedHandheld||matchMedia('(max-width:900px)').matches;
+const handheldActive=()=>handheldDevice()&&(forcedHandheld||innerWidth<=1180);
 
 function material(color,glow=0){return new THREE.MeshStandardMaterial({color,roughness:.4,metalness:theme==='cosmic'?.65:.16,emissive:glow,emissiveIntensity:.35})}
 function clearGroup(group){if(!group)return;while(group.children.length){const item=group.children[0];group.remove(item);item.traverse(node=>{node.geometry?.dispose();if(node.material)(Array.isArray(node.material)?node.material:[node.material]).forEach(m=>m.dispose())})}}
@@ -238,7 +240,8 @@ function init3D(){
  return true;
 }
 function init(){
- if(forcedHandheld)document.body.classList.add('handheld-active');
+ document.body.classList.toggle('handheld-active',handheldActive());
+ window.addEventListener('resize',()=>{document.body.classList.toggle('handheld-active',handheldActive());render2D()});
  audio.setTheme(theme);audio.setMode(viewMode);connectButtons();
  const ok=init3D();drawPieces();renderStatus();
  if(!ok)setView('2d',false);else if(query.get('view')==='2d')setView('2d',false);else setView('3d',false);
