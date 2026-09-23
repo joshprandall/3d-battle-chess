@@ -17,7 +17,7 @@ let theme='classic',selected=null,legal=[],busy=false,soundOn=true,aiTimer=null,
 let viewMode='3d',flipped=false,handCursor={x:4,y:6},keyboardCursor=false,fullscreenStarted=false,webglReady=false;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const query=new URLSearchParams(location.search);
-const useV8Combat=query.get('combat')==='v8';
+const useV8Combat=query.get('combat')!=='v7';
 const handheldDevice=()=>{
  const ua=navigator.userAgent||'';
  const explicit=/Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua);
