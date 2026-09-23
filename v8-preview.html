@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Battle Chess v8 Combat Lab</title>
+<link rel="stylesheet" href="v8-preview.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header>
+ <div><h1>Battle Chess v8 Combat Lab</h1><p>Development preview — isolated from the live v7 game.</p></div>
+ <a href="index.html">Return to stable game</a>
+</header>
+<main>
+ <section class="controls" aria-label="V8 combat selection">
+  <label>Set<select id="set"><option value="classic">Classic</option><option value="arcane">Arcane</option><option value="monsters">Monsters</option><option value="brick">Brick Battle</option><option value="cosmic">Cosmic War</option></select></label>
+  <label>Attacker<select id="attacker"><option value="p">Pawn</option><option value="n">Knight</option><option value="b">Bishop</option><option value="r">Rook</option><option value="q">Queen</option><option value="k">King</option></select></label>
+  <label>Defender<select id="defender"><option value="p">Pawn</option><option value="n">Knight</option><option value="b">Bishop</option><option value="r">Rook</option><option value="q">Queen</option><option value="k">King</option></select></label>
+  <button id="play" type="button">Play battle</button>
+  <button id="next" type="button">Next matchup</button>
+ </section>
+ <section class="stage">
+  <div id="scene" role="application" aria-label="Battle Chess v8 combat preview"></div>
+  <div class="status">
+   <strong id="title">Loading v8 characters…</strong>
+   <span id="phase">Initializing</span>
+  </div>
+ </section>
+ <section class="cards">
+  <article><h2 id="attackerName">Attacker</h2><p id="attackerInfo"></p></article>
+  <article><h2 id="defenderName">Defender</h2><p id="defenderInfo"></p></article>
+  <article><h2>Contact telemetry</h2><p id="telemetry">No impact yet.</p></article>
+ </section>
+</main>
+<script type="module" src="v8-preview.js"></script>
+</body>
+</html>
