@@ -10,7 +10,7 @@ const mat=(color,rough=.65,metal=.12,emissive=0,intensity=0)=>new THREE.MeshStan
 function materialsFor(definition,side){
  const p=PALETTES[definition.theme]||PALETTES.classic,dark=side==='b';
  return {
-  primary:mat(dark?p.b:p.w,.72,definition.theme==='cosmic'?.35:.08),
+  primary:mat(dark?p.b:p.w,.72,definition.theme==='cosmic' ? .35 : .08),
   secondary:mat(dark?0x172536:0x4a3929,.82,.05),
   armor:mat(dark?0x7b98ab:p.trim,.42,.42),
   skin:mat(definition.theme==='monsters'?(dark?0x516753:0x859665):(dark?0x71808c:0xc3a184),.82,.04),
