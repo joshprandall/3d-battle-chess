@@ -13,7 +13,8 @@ try{
  await desktop.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  assert.equal(await desktop.locator('#handheldConsole').isVisible(),false,'handheld console stays hidden on desktop even with handheld query');
  await desktop.close();
- const page=await browser.newPage({viewport:{width:390,height:844}});
+ const mobileContext=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'});
+ const page=await mobileContext.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:8769/?handheld=1',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
@@ -58,5 +59,6 @@ try{
  await page.locator('#handSelect').click();
  assert.match(await page.locator('#handheldStatus').textContent(),/Cursor/,'handheld cursor and select controls remain active');
  assert.deepEqual(errors,[],'no uncaught browser errors');
- console.log('PASS v7 UX: 2D↔3D, handheld console, mode-aware audio, strength profiles and fullscreen request');
+ await mobileContext.close();
+ console.log('PASS v7 UX: 2D↔3D, handheld console, mode-aware audio, strength profiles, fullscreen request and desktop handheld gating');
 }finally{await browser?.close();server.kill();}
