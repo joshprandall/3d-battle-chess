@@ -6,6 +6,8 @@ import {poseRig,weaponWorldPoint,hitVolumes} from './rig-types.js';
 import {impactResponse} from './reactions.js';
 import {body,applyImpulse,integrate,driveToward} from './physics.js';
 import {AttackExecutorV8} from './attack-executor.js';
+import {choreographyPose} from './choreography.js';
+import {defeatPose} from './defeat-choreography.js';
 
 const roleMass=role=>({p:.85,n:1.08,b:.96,r:2.45,q:1.20,k:1.58})[role]||1;
 
@@ -31,8 +33,15 @@ export class CombatDirectorV8{
   integrate(this.aBody,dt);integrate(this.dBody,dt);
   this.attacker.position.set(this.aBody.x,this.aBody.y+pose.lift,this.aBody.z);
   this.defender.position.set(this.dBody.x,this.dBody.y,this.dBody.z);
-  poseRig(this.attacker,{gait:Math.sin(this.elapsed*9)*Math.min(1,Math.abs(this.aBody.vx)),windup:pose.windup,attack:pose.attack,follow:pose.follow,recover:pose.recover,crouch:pose.crouch,spin:pose.spin,lean:pose.rootDrive*.12,brace:.3,weaponArc:style.weaponArc});
-  poseRig(this.defender,{brace:this.contact?.reaction?.fall?.15:.55,lean:this.contact?.reaction?.stagger*.28||0,crouch:this.contact?.reaction?.fall?.25:0,head:this.contact?.reaction?.stagger*.12||0});
+  const signature=choreographyPose(this.attackerDef.attack,pose);
+  poseRig(this.attacker,{
+   gait:Math.sin(this.elapsed*(this.attackerDef.locomotion==='ponderous'?5.2:this.attackerDef.locomotion==='skittering'?12.5:9))*Math.min(1,Math.abs(this.aBody.vx)),
+   windup:pose.windup,attack:pose.attack,follow:pose.follow,recover:pose.recover,crouch:pose.crouch+(signature.crouch||0),spin:pose.spin,
+   lean:pose.rootDrive*.12+(signature.lean||0),brace:.3,weaponArc:style.weaponArc,...signature,
+   wingBeat:this.attackerDef.wings?Math.sin(this.elapsed*9)*.34:0,orbitAngle:this.elapsed*2.4
+  });
+  const defeated=defeatPose(this.defenderDef,this.contact?.reaction,this.contact?this.elapsed-this.contact.time:0);
+  poseRig(this.defender,{brace:this.contact?.reaction?.fall?.15:.55,...defeated});
   const tip=new THREE.Vector3();weaponWorldPoint(this.attacker,tip);
   if(!this.contact){
    const event=this.executor.update({
