@@ -17,6 +17,18 @@ jobs:
       - run: node tests/v8-browser.mjs
       - run: node tests/v8-preview.mjs
       - run: node tests/v8-game-integration.mjs
+      - name: Package isolated v8 preview
+        run: |
+          mkdir -p artifacts/v8-preview/combat-v8
+          cp v8-preview.html v8-preview.css v8-preview.js pieces.js artifacts/v8-preview/
+          cp combat-v8/*.js artifacts/v8-preview/combat-v8/
+          cd artifacts/v8-preview
+          zip -r ../battle-chess-v8-preview.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: battle-chess-v8-preview
+          path: artifacts/battle-chess-v8-preview.zip
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()
         with:
