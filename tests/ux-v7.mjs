@@ -9,7 +9,7 @@ try{
  await delay(1100);
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
  const desktop=await browser.newPage({viewport:{width:1365,height:850}});
- await desktop.goto('http://127.0.0.1:8769/?handheld=1',{waitUntil:'domcontentloaded'});
+ await desktop.goto('http://127.0.0.1:8769/?handheld=1&combat=v7',{waitUntil:'domcontentloaded'});
  await desktop.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  assert.equal(await desktop.locator('#handheldConsole').isVisible(),false,'handheld console stays hidden on desktop even with handheld query');
  await desktop.locator('#mode').selectOption('local');
@@ -29,7 +29,7 @@ try{
  const mobileContext=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'});
  const page=await mobileContext.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('http://127.0.0.1:8769/',{waitUntil:'domcontentloaded'});
+ await page.goto('http://127.0.0.1:8769/?combat=v7',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
 
  assert.ok(await page.locator('#handheldConsole').isVisible(),'handheld console appears automatically on a phone/tablet');

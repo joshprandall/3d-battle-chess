@@ -11,3 +11,5 @@ jobs:
         with:
           node-version: '22'
       - run: npm test
+      - run: node tests/v8-foundation.mjs
+      - run: node tests/v8-attacks.mjs
