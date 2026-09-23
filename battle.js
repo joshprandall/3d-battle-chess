@@ -15,7 +15,13 @@ let theme='classic',selected=null,legal=[],busy=false,soundOn=true,aiTimer=null,
 let viewMode='3d',flipped=false,handCursor={x:4,y:6},fullscreenStarted=false,webglReady=false;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const query=new URLSearchParams(location.search);
-const handheldDevice=()=>matchMedia('(pointer: coarse)').matches||navigator.maxTouchPoints>0||innerWidth<=900;
+const handheldDevice=()=>{
+ const ua=navigator.userAgent||'';
+ const explicit=/Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua);
+ const ipadDesktopUA=navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1;
+ const coarseTouch=navigator.maxTouchPoints>0&&matchMedia('(pointer: coarse)').matches&&Math.min(screen.width,screen.height)<=1024;
+ return explicit||ipadDesktopUA||coarseTouch;
+};
 const forcedHandheld=query.get('handheld')==='1'&&handheldDevice();
 const glyphs={w:{p:'♙',n:'♘',b:'♗',r:'♖',q:'♕',k:'♔'},b:{p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'}};
 const roleNames={p:'Pawn',n:'Knight',b:'Bishop',r:'Rook',q:'Queen',k:'King'};
