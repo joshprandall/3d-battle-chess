@@ -21,7 +21,7 @@ export function defeatPose(definition,reaction,elapsed=0){
   lean:p.fall*t.collapse*s,
   turn:p.twist*t.spin*s*(definition.role==='q'?-1:1),
   head:.28*s,
-  crouch:(reaction.fall?.30:.12)*s,
+  crouch:(reaction.fall ? .30 : .12)*s,
   fall:reaction.fall?s:0,
   torsoRoll:p.fallAxis==='x'?p.fall*s:p.twist*s
  };
