@@ -34,16 +34,16 @@ body.immersive-lock{overflow:hidden;overscroll-behavior:none}
 body.handheld-active .handheld-console{display:block}
 .handheld-console{position:fixed;z-index:40;left:50%;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(96vw,720px);padding:8px 10px 10px;border:1px solid #456078;border-radius:18px;background:#071019ef;backdrop-filter:blur(16px);box-shadow:0 18px 50px #000c}
 .handheld-heading{display:flex;justify-content:space-between;gap:10px;align-items:center;color:#9fdff0;font-size:.7rem;letter-spacing:.08em;padding:0 4px 6px}.handheld-heading span{color:#dbe8f2;letter-spacing:0}
-.handheld-body{display:grid;grid-template-columns:132px 1fr;gap:10px;align-items:center}.dpad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(3,42px);gap:2px}.dpad button,.hand-actions button{min-height:40px;padding:6px;border-radius:10px;background:#14283a;border-color:#42627c;font-weight:700}.dpad .select-key{font-size:.58rem;background:#1b4656;border-color:#67e8f9}.hand-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.hand-actions button{font-size:.72rem}
-body.handheld-active .hud{bottom:160px}
-@media(max-width:900px){body.handheld-active .handheld-console{display:block}body.handheld-active .hud{bottom:160px}.site-nav{z-index:45}body.handheld-active .panel{padding-bottom:170px}}
-@media(max-width:520px){.handheld-console{width:calc(100vw - 10px);bottom:5px;padding:6px}.handheld-body{grid-template-columns:116px 1fr;gap:6px}.dpad{grid-template-columns:repeat(3,36px);grid-template-rows:repeat(3,36px)}.dpad button,.hand-actions button{min-height:34px;padding:4px}.hand-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.hand-actions button{font-size:.66rem}.handheld-heading{font-size:.62rem}body.handheld-active .hud{bottom:156px}}
+.handheld-body{display:block}.hand-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.hand-actions button{min-height:40px;padding:6px;border-radius:10px;background:#14283a;border-color:#42627c;font-weight:700;font-size:.72rem}
+body.handheld-active .hud{bottom:118px}
+@media(max-width:900px){body.handheld-active .handheld-console{display:block}body.handheld-active .hud{bottom:118px}.site-nav{z-index:45}body.handheld-active .panel{padding-bottom:128px}}
+@media(max-width:520px){.handheld-console{width:calc(100vw - 10px);bottom:5px;padding:6px}.hand-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.hand-actions button{min-height:36px;padding:4px;font-size:.66rem}.handheld-heading{font-size:.62rem}body.handheld-active .hud{bottom:112px}}
 
 /* Device-native immersive layout */
 body.handheld-active .game-shell:fullscreen .stage,
-body.handheld-active .game-shell.immersive-fullscreen .stage{height:calc(100dvh - 150px)}
+body.handheld-active .game-shell.immersive-fullscreen .stage{height:calc(100dvh - 108px)}
 body.handheld-active .game-shell:fullscreen .board2d,
-body.handheld-active .game-shell.immersive-fullscreen .board2d{width:min(calc(100vw - 10px),calc(100dvh - 168px),760px)}
+body.handheld-active .game-shell.immersive-fullscreen .board2d{width:min(calc(100vw - 10px),calc(100dvh - 122px),760px)}
 body.handheld-active .game-shell:fullscreen .hud,
 body.handheld-active .game-shell.immersive-fullscreen .hud{bottom:max(8px,env(safe-area-inset-bottom))}
 body.handheld-active .game-shell:fullscreen .handheld-console,
