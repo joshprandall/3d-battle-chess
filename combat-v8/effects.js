@@ -84,7 +84,7 @@ export class CombatEffectsV8{
   const profile=this.profile,kind=this.attack.kind;
   this.trail.visible=false;this.projectile.visible=false;this.beam.visible=false;this.area.visible=false;this.portalA.visible=this.portalB.visible=false;
   if((kind==='melee'||kind==='body'||kind==='teleport-melee')&&this.previousTip&&(pose.state==='commit'||pose.state==='follow-through')){
-   setLine(this.trail,this.previousTip,weaponTip,profile.trail==='great-arc'||profile.trail==='heavy'?.055:profile.trail==='triple-claw'?.045:.027);
+   setLine(this.trail,this.previousTip,weaponTip,(profile.trail==='great-arc'||profile.trail==='heavy') ? .055 : (profile.trail==='triple-claw' ? .045 : .027));
    if(profile.trail==='spin-ring'){this.area.visible=true;this.area.position.set(attackerPosition.x,attackerPosition.y+.75,attackerPosition.z);this.area.scale.setScalar(.8+pose.attack*.8);this.area.rotation.z+=.12;}
   }
   if(profile.portal&&pose.state==='commit'){
@@ -97,7 +97,7 @@ export class CombatEffectsV8{
    if(profile.projectile==='plasma-orbs'){this.projectile.scale.setScalar(1+.22*Math.sin(elapsed*16));}
   }
   if(kind==='beam'&&(pose.state==='commit'||pose.state==='follow-through')){
-   this.beam.visible=true;setLine(this.beam,weaponTip,defenderPosition,profile.beam==='psionic'?.055:.045);
+   this.beam.visible=true;setLine(this.beam,weaponTip,defenderPosition,profile.beam==='psionic' ? .055 : .045);
   }
   if(kind==='area'&&(pose.state==='commit'||pose.state==='follow-through')){
    this.area.visible=true;this.area.position.set(attackerPosition.x,.06,attackerPosition.z);
