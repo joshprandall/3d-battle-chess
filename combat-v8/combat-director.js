@@ -30,7 +30,7 @@ export class CombatDirectorV8{
   this.elapsed+=dt;
   const pose=this.runtime.update(dt),style=this.runtime.attack.style||{},kind=this.runtime.attack.kind;
   const ranged=kind==='projectile'||kind==='beam'||kind==='area';
-  if(pose.state==='approach')driveToward(this.aBody,ranged?-0.35:.60,ranged?.75:1.8+(style.drive||0)*1.2,ranged?4.2:8,dt);
+  if(pose.state==='approach')driveToward(this.aBody,ranged?-0.35:.60,ranged ? .75 : 1.8+(style.drive||0)*1.2,ranged?4.2:8,dt);
   if(pose.blink&&pose.state==='commit')this.aBody.x=Math.max(this.aBody.x,this.dBody.x-.72);
   integrate(this.aBody,dt);integrate(this.dBody,dt);
   this.attacker.position.set(this.aBody.x,this.aBody.y+pose.lift,this.aBody.z);
@@ -43,7 +43,7 @@ export class CombatDirectorV8{
    wingBeat:this.attackerDef.wings?Math.sin(this.elapsed*9)*.34:0,orbitAngle:this.elapsed*2.4
   });
   const defeated=defeatPose(this.defenderDef,this.contact?.reaction,this.contact?this.elapsed-this.contact.time:0);
-  poseRig(this.defender,{brace:this.contact?.reaction?.fall?.15:.55,...defeated});
+  poseRig(this.defender,{brace:this.contact?.reaction?.fall ? .15 : .55,...defeated});
   const tip=new THREE.Vector3();weaponWorldPoint(this.attacker,tip);
   if(!this.contact){
    const event=this.executor.update({
@@ -70,6 +70,4 @@ export class CombatDirectorV8{
   return {pose,contact:this.contact,complete:this.runtime.complete,attacker:this.attacker,defender:this.defender,attack:this.runtime.attack,effects:this.effectsGroup};
  }
  dispose(){this.effects?.dispose();}
-}
- }
 }
