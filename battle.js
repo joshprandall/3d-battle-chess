@@ -3,6 +3,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {ChessGame,chooseComputerMove,computerProfile} from './engine.js';
 import {PALETTES} from './pieces.js';
 import {createCharacter} from './characters.js';
+import {createV8BoardPiece} from './combat-v8/character-factory.js';
 import {animateDuel} from './duels.js';
 import {animateDuelV8} from './duels-v8.js';
 import {castleAttempt,castleNotation} from './castle-controls.js';
@@ -71,7 +72,13 @@ function render2D(){
  updateHandheldStatus();
 }
 function drawPieces(){
- if(pieceGroup){clearGroup(pieceGroup);for(let y=0;y<8;y++)for(let x=0;x<8;x++)if(game.piece(x,y))pieceGroup.add(createCharacter(game.piece(x,y),x,y,theme))}
+ if(pieceGroup){
+  clearGroup(pieceGroup);
+  for(let y=0;y<8;y++)for(let x=0;x<8;x++)if(game.piece(x,y)){
+   const p=game.piece(x,y);
+   pieceGroup.add(useV8Combat?createV8BoardPiece(p,x,y,theme):createCharacter(p,x,y,theme));
+  }
+ }
  highlight();
 }
 function highlight(){
