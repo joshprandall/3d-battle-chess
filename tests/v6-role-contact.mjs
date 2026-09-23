@@ -9,6 +9,8 @@ try{
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
  const page=await browser.newPage({viewport:{width:390,height:844}});
  await page.goto('http://127.0.0.1:8768/',{waitUntil:'domcontentloaded'});
+ await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
+ await page.locator('#startGameBtn').click();
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  const results=await page.evaluate(async()=>{
   const THREE=await import('three'),{animateDuel}=await import('./duels-v6.js');
