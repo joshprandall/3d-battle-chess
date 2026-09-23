@@ -37,6 +37,7 @@ try{
  const profiles=await page.evaluate(async()=>{const {computerProfile}=await import('./engine.js');return [1,2,3].map(computerProfile)});
  assert.deepEqual(profiles.map(p=>p.name),['Recruit','Warrior','Champion']);
  assert.deepEqual(profiles.map(p=>p.depth),[1,2,3],'computer strength maps to distinct search depths');
+ await page.locator('#mode').selectOption('ai');
  await page.locator('#difficulty').selectOption('3');
  assert.match(await page.locator('#toast').textContent(),/Champion/,'strength change is acknowledged in UI');
 
