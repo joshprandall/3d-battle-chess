@@ -13,7 +13,7 @@ try{
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  const result=await page.evaluate(async()=>{
   const THREE=await import('three');
-  const {createV8Character}=await import('./combat-v8/character-factory.js');
+  const {createV8Character,createV8BoardPiece}=await import('./combat-v8/character-factory.js');
   const {poseRig,weaponWorldPoint,hitVolumes}=await import('./combat-v8/rig-types.js');
   const {CHARACTER_SETS,ROLE_ORDER}=await import('./combat-v8/character-definitions.js');
   const {visualRecipeIds}=await import('./combat-v8/character-visuals.js');
@@ -30,6 +30,10 @@ try{
    if(!Number.isFinite(tip.x)||vols.length<3||meshes<12)throw Error(`Bad v8 model ${theme}:${role}`);
    signatures.push({theme,role,name:root.userData.definition.name,rig:root.userData.definition.rig,visual:root.userData.visualSignature,meshes,size:[size.x,size.y,size.z].map(v=>Number(v.toFixed(3)))});
    root.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())});
+   const board=createV8BoardPiece({t:role,c:'w'},3,3,theme),boardBox=new THREE.Box3().setFromObject(board),boardSize=new THREE.Vector3();boardBox.getSize(boardSize);
+   if(boardSize.x>1.05||boardSize.z>1.05||boardSize.y>1.55)throw Error(`Board v8 model does not fit square ${theme}:${role} ${boardSize.toArray()}`);
+   if(!board.userData.boardCharacterV8||board.userData.x!==3||board.userData.y!==3)throw Error(`Bad v8 board metadata ${theme}:${role}`);
+   board.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())});
   }
   return {signatures,visualIds:visualRecipeIds(),choreoIds:choreographyIds(),choreoFingerprints:choreographyIds().map(id=>choreographyFingerprint(id))};
  });
@@ -46,5 +50,5 @@ try{
    assert.equal(new Set(set.map(x=>x.visual)).size,6,`${theme} exposes six unique visual identities`);
    assert.equal(new Set(set.map(x=>`${x.meshes}:${x.size.join(',')}`)).size,6,`${theme} has six distinct rendered silhouettes`);
  }
- console.log('PASS v8 browser: 30 distinct themed characters, 30 distinct choreographies, articulated rigs and hit volumes');
+ console.log('PASS v8 browser: 30 distinct themed characters, board-fit character pieces, 30 distinct choreographies, articulated rigs and hit volumes');
 }finally{await browser?.close();server.kill();}
