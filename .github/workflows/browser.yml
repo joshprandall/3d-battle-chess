@@ -18,6 +18,7 @@ jobs:
       - run: node tests/v6-fighters.mjs
       - run: node tests/v6-role-contact.mjs
       - run: node tests/ux-v7.mjs
+      - run: node tests/v8-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
