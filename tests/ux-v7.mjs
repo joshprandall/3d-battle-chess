@@ -12,21 +12,36 @@ try{
  await desktop.goto('http://127.0.0.1:8769/?handheld=1',{waitUntil:'domcontentloaded'});
  await desktop.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  assert.equal(await desktop.locator('#handheldConsole').isVisible(),false,'handheld console stays hidden on desktop even with handheld query');
+ await desktop.locator('#mode').selectOption('local');
+ await desktop.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
+ await desktop.keyboard.press('Enter');
+ assert.equal(await desktop.locator('#gameShell').getAttribute('data-fullscreen-requested'),'yes','first keyboard play input requests fullscreen on desktop');
+ await desktop.keyboard.press('ArrowUp');await desktop.keyboard.press('ArrowUp');await desktop.keyboard.press('Enter');
+ await desktop.waitForFunction(()=>document.querySelectorAll('#log li').length===1,null,{timeout:5000});
+ assert.match(await desktop.locator('#log li').first().textContent(),/e4/,'desktop game is fully playable without a mouse');
+ await desktop.evaluate(()=>document.querySelector('#gameShell').classList.add('immersive-fullscreen'));
+ assert.equal(await desktop.locator('.topbar').evaluate(el=>getComputedStyle(el).display),'none','immersive fullscreen removes top chrome');
+ assert.equal(await desktop.locator('.panel').evaluate(el=>getComputedStyle(el).display),'none','immersive fullscreen removes side borders/panel');
+ const fullStage=await desktop.locator('.stage').boundingBox();
+ assert.ok(fullStage&&Math.abs(fullStage.width-1365)<3&&Math.abs(fullStage.height-850)<3,'fullscreen stage dynamically fits desktop resolution');
+ await desktop.evaluate(()=>document.querySelector('#gameShell').classList.remove('immersive-fullscreen'));
  await desktop.close();
  const mobileContext=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'});
  const page=await mobileContext.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('http://127.0.0.1:8769/?handheld=1',{waitUntil:'domcontentloaded'});
+ await page.goto('http://127.0.0.1:8769/',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
 
- assert.ok(await page.locator('#handheldConsole').isVisible(),'handheld console is visible on handheld route');
+ assert.ok(await page.locator('#handheldConsole').isVisible(),'handheld console appears automatically on a phone/tablet');
  await page.locator('#mode').selectOption('local');
+ await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
  await page.locator('#viewToggle').click();
  assert.ok(await page.locator('#board2d').isVisible(),'2D board is visible after toggle');
  assert.equal(await page.locator('#board2d .square2d').count(),64,'2D board renders 64 interactive squares');
  assert.equal(await page.locator('#scene').isVisible(),false,'3D scene hides in 2D mode');
 
  await page.locator('.square2d[data-x="4"][data-y="6"]').click();
+ assert.equal(await page.locator('#gameShell').getAttribute('data-fullscreen-requested'),'yes','first handheld play input requests fullscreen');
  await page.locator('.square2d[data-x="4"][data-y="4"]').click();
  await page.waitForFunction(()=>document.querySelectorAll('#log li').length===1,null,{timeout:5000});
  assert.match(await page.locator('#log li').first().textContent(),/e4/,'2D board makes legal moves with the same chess engine');
@@ -47,7 +62,6 @@ try{
  await page.locator('#difficulty').selectOption('3');
  assert.match(await page.locator('#toast').textContent(),/Champion/,'strength change is acknowledged in UI');
 
- await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
  await page.locator('#fullscreenBtn').click();
  assert.equal(await page.locator('#gameShell').getAttribute('data-fullscreen-requested'),'yes','fullscreen control requests game-shell fullscreen');
 
@@ -60,5 +74,5 @@ try{
  assert.match(await page.locator('#handheldStatus').textContent(),/Cursor/,'handheld cursor and select controls remain active');
  assert.deepEqual(errors,[],'no uncaught browser errors');
  await mobileContext.close();
- console.log('PASS v7 UX: 2D↔3D, handheld console, mode-aware audio, strength profiles, fullscreen request and desktop handheld gating');
+ console.log('PASS v7 UX: device-only handheld UI, keyboard-only desktop play, immersive fullscreen fit, 2D↔3D, audio gating and AI strength');
 }finally{await browser?.close();server.kill();}
