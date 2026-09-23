@@ -12,3 +12,42 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 284px;min-height:calc(100d
 .site-nav a:first-child{background:#1a4555;border-color:#67e8f9;color:#f3ffff}
 .site-nav a:hover,.site-nav a:focus-visible{border-color:#a5f3fc;outline:2px solid #a5f3fc;outline-offset:2px;background:#255268}
 @media(max-width:390px){.site-nav{gap:6px;padding-left:8px;padding-right:8px}.site-nav a{font-size:.78rem;padding:8px 9px}}
+
+/* v7 play modes */
+.game-shell{min-height:calc(100dvh - 61px)}
+.board2d{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(88%,calc(100dvh - 190px),760px);aspect-ratio:1;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));padding:0;border:10px solid #1a2837;box-shadow:0 24px 70px #0009;background:#1a2837;touch-action:manipulation}
+.board2d.hidden{display:none}
+.square2d{position:relative;display:grid;place-items:center;min-width:0;min-height:0;padding:0;border:0;border-radius:0;font-family:"Segoe UI Symbol","Apple Symbols",serif;font-size:clamp(1.65rem,7vw,4.8rem);line-height:1;color:#15202b;text-shadow:0 1px 0 #ffffff70;box-shadow:none;outline-offset:-4px}
+.square2d.light{background:#aeb8b1}.square2d.dark{background:#607583}.square2d.black-piece{color:#172634;text-shadow:0 1px 0 #9fb5c555}.square2d.white-piece{color:#f0dfbd;text-shadow:0 1px 1px #5d4b31}
+.square2d.selected{box-shadow:inset 0 0 0 5px #fbbf24}.square2d.legal::after{content:"";width:22%;aspect-ratio:1;border-radius:50%;background:#2dd4bfcc;position:absolute}.square2d.capture::after{background:transparent;width:70%;border:4px solid #fb7185cc}.square2d.cursor{outline:4px solid #67e8f9;z-index:2}
+.game-shell:fullscreen,.game-shell.immersive-fullscreen{width:100vw;height:100dvh;overflow:hidden;background:#071019;border:0;margin:0;padding:0}
+.game-shell.immersive-fullscreen{position:fixed;inset:0;z-index:9999}
+.game-shell:fullscreen .topbar,.game-shell.immersive-fullscreen .topbar{display:none}
+.game-shell:fullscreen main,.game-shell.immersive-fullscreen main{display:block;width:100vw;height:100dvh;min-height:0;border:0;margin:0;padding:0}
+.game-shell:fullscreen .stage,.game-shell.immersive-fullscreen .stage{width:100vw;height:100dvh;min-height:0;border:0;margin:0;padding:0}
+.game-shell:fullscreen .panel,.game-shell.immersive-fullscreen .panel{display:none}
+.game-shell:fullscreen #scene,.game-shell.immersive-fullscreen #scene{inset:0;width:100%;height:100%}
+.game-shell:fullscreen .board2d,.game-shell.immersive-fullscreen .board2d{width:min(96vw,96dvh,920px);max-width:none;border-width:0;box-shadow:none}
+.game-shell:fullscreen .hud,.game-shell.immersive-fullscreen .hud{left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom))}
+body.immersive-lock{overflow:hidden;overscroll-behavior:none}
+.handheld-console{display:none}
+body.handheld-active .handheld-console{display:block}
+.handheld-console{position:fixed;z-index:40;left:50%;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(96vw,720px);padding:8px 10px 10px;border:1px solid #456078;border-radius:18px;background:#071019ef;backdrop-filter:blur(16px);box-shadow:0 18px 50px #000c}
+.handheld-heading{display:flex;justify-content:space-between;gap:10px;align-items:center;color:#9fdff0;font-size:.7rem;letter-spacing:.08em;padding:0 4px 6px}.handheld-heading span{color:#dbe8f2;letter-spacing:0}
+.handheld-body{display:grid;grid-template-columns:132px 1fr;gap:10px;align-items:center}.dpad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(3,42px);gap:2px}.dpad button,.hand-actions button{min-height:40px;padding:6px;border-radius:10px;background:#14283a;border-color:#42627c;font-weight:700}.dpad .select-key{font-size:.58rem;background:#1b4656;border-color:#67e8f9}.hand-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.hand-actions button{font-size:.72rem}
+body.handheld-active .hud{bottom:160px}
+@media(max-width:900px){body.handheld-active .handheld-console{display:block}body.handheld-active .hud{bottom:160px}.site-nav{z-index:45}body.handheld-active .panel{padding-bottom:170px}}
+@media(max-width:520px){.handheld-console{width:calc(100vw - 10px);bottom:5px;padding:6px}.handheld-body{grid-template-columns:116px 1fr;gap:6px}.dpad{grid-template-columns:repeat(3,36px);grid-template-rows:repeat(3,36px)}.dpad button,.hand-actions button{min-height:34px;padding:4px}.hand-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.hand-actions button{font-size:.66rem}.handheld-heading{font-size:.62rem}body.handheld-active .hud{bottom:156px}}
+
+/* Device-native immersive layout */
+body.handheld-active .game-shell:fullscreen .stage,
+body.handheld-active .game-shell.immersive-fullscreen .stage{height:calc(100dvh - 150px)}
+body.handheld-active .game-shell:fullscreen .board2d,
+body.handheld-active .game-shell.immersive-fullscreen .board2d{width:min(calc(100vw - 10px),calc(100dvh - 168px),760px)}
+body.handheld-active .game-shell:fullscreen .hud,
+body.handheld-active .game-shell.immersive-fullscreen .hud{bottom:max(8px,env(safe-area-inset-bottom))}
+body.handheld-active .game-shell:fullscreen .handheld-console,
+body.handheld-active .game-shell.immersive-fullscreen .handheld-console{bottom:max(4px,env(safe-area-inset-bottom));border-radius:14px}
+@media(min-width:901px){
+ .game-shell:fullscreen .hud,.game-shell.immersive-fullscreen .hud{font-size:.9rem}
+}

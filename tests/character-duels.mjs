@@ -24,6 +24,8 @@ try{
   }return roles;
  });
  assert.equal(roles.length,30,'all 30 combinations have independent, articulated arena fighters');
+ // Fullscreen behavior has dedicated v7 coverage; keep this animation harness windowed.
+ await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
  await page.locator('#menuBtn').click();await page.locator('#mode').selectOption('local');await page.locator('#menuBtn').click();
  const move=async text=>{await page.locator('#moveInput').fill(text);await page.locator('#moveForm button').click()};
  await move('e2e4');await move('d7d5');
