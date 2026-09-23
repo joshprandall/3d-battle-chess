@@ -81,7 +81,7 @@ export function poseRig(root,pose={}){
  const r=root?.userData?.rigV8;if(!r)return;
  const gait=(pose.gait||0)+(pose.stepBias||0)*.22,wind=pose.windup||0,attack=pose.attack||0,follow=pose.follow||0,recover=pose.recover||0,crouch=pose.crouch||0;
  const sway=pose.rootSway||0;
- r.pelvis.position.y=(r.type==='creature'?.67:.72)*r.scale-crouch*.14;
+ r.pelvis.position.y=(r.type==='creature' ? .67 : .72)*r.scale-crouch*.14;
  r.pelvis.position.z=sway;
  r.pelvis.rotation.z=(pose.pelvisRoll||0)+(pose.fall||0)*.28;
  r.waist.rotation.y=(pose.turn||0)+(pose.spin||0);
@@ -92,7 +92,7 @@ export function poseRig(root,pose={}){
  r.head.rotation.y=-(pose.turn||0)*.18;
  if(r.right?.upper){
   r.right.upper.rotation.x=-.35-wind*1.05+attack*.82-follow*.22+recover*.28+(pose.rightX||0);
-  r.right.upper.rotation.z=-.22-(pose.weaponArc==='wide-sweep'?.55:0)+(pose.rightZ||0);
+  r.right.upper.rotation.z=-.22-(pose.weaponArc==='wide-sweep' ? .55 : 0)+(pose.rightZ||0);
  }
  if(r.right?.elbow)r.right.elbow.rotation.x=-.35-wind*.45+attack*.28+(pose.rightElbow||0);
  if(r.left?.upper){
