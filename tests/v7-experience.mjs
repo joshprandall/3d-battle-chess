@@ -10,7 +10,10 @@ try{
  await page.goto('http://127.0.0.1:8772/',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  assert.equal(await page.locator('#board2d .chess-square').count(),64);
  await page.locator('.switch-board').click();assert.ok(await page.locator('#board2d').isVisible());assert.match(await page.locator('.switch-board').innerText(),/3D/);
- await page.locator('#mode').selectOption('local');await page.locator('[data-square="e2"]').click();assert.match(await page.locator('[data-square="e4"]').getAttribute('class'),/legal/);await page.locator('[data-square="e4"]').click();await page.waitForFunction(()=>document.querySelectorAll('#log li').length===1);
+ await page.locator('#mode').selectOption('local');await page.locator('[data-square="e2"]').click();
+ await page.waitForFunction(()=>!!document.fullscreenElement,{timeout:5000});assert.match(await page.locator('[data-square="e4"]').getAttribute('class'),/legal/);
+ await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.fullscreenElement,{timeout:5000});
+ await page.locator('[data-square="e4"]').click();await page.waitForFunction(()=>document.querySelectorAll('#log li').length===1);
  await page.locator('.switch-board').click();assert.ok(!(await page.locator('#board2d').isVisible()));assert.match(await page.locator('.switch-board').innerText(),/2D/);
  await page.locator('.screen-toggle').click();await page.waitForFunction(()=>!!document.fullscreenElement,{timeout:5000});await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.fullscreenElement,{timeout:5000});
  const ai=await page.evaluate(async()=>{const {ChessGame}=await import('./engine.js'),{chooseComputerMoveV7}=await import('./computer-v7.js');const g=new ChessGame();g.move(4,6,4,4);const key=g.positionKey(),moves=[];for(const level of [1,2,3]){const m=chooseComputerMoveV7(g,level);if(!g.legalMoves(m.x,m.y).some(v=>v.nx===m.nx&&v.ny===m.ny))throw Error('illegal move '+level);moves.push(m);if(g.positionKey()!==key||g.moves.length!==1)throw Error('AI mutated board '+level)}return moves});assert.equal(ai.length,3);
