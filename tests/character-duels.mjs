@@ -11,6 +11,10 @@ try{
  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:8766/?combat=v7',{waitUntil:'domcontentloaded'});
+ await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
+ await page.locator('#setupMode').selectOption('local');
+ await page.locator('#startGameBtn').click();
+ await page.setViewportSize({width:844,height:390});
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  const roles=await page.evaluate(async()=>{
   const {createCharacter,poseCharacter}=await import('./characters.js');const {createDuelFighter}=await import('./combatants.js');const roles=[];
@@ -24,9 +28,7 @@ try{
   }return roles;
  });
  assert.equal(roles.length,30,'all 30 combinations have independent, articulated arena fighters');
- // Fullscreen behavior has dedicated v7 coverage; keep this animation harness windowed.
- await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
- await page.locator('#menuBtn').click();await page.locator('#mode').selectOption('local');await page.locator('#menuBtn').click();
+ // Fullscreen behavior has dedicated v7 coverage; this harness starts through the real setup flow.
  const move=async text=>{await page.locator('#moveInput').fill(text);await page.locator('#moveForm button').click()};
  await move('e2e4');await move('d7d5');
  await move('e4d5');
