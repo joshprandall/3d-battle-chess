@@ -124,6 +124,10 @@ async function enterFullscreen(){
  if(!gameShell?.requestFullscreen){notice('Full screen is not supported by this browser.');return false}
  try{await gameShell.requestFullscreen();return true}catch{notice('Full screen was blocked by the browser.');return false}
 }
+async function toggleFullscreen(){
+ if(document.fullscreenElement){try{await document.exitFullscreen()}catch{}return}
+ fullscreenStarted=true;await enterFullscreen();
+}
 function beginPlayFullscreen(){
  if(fullscreenStarted||innerWidth<=850||document.fullscreenElement)return;
  fullscreenStarted=true;void enterFullscreen();
@@ -206,13 +210,13 @@ function nudgeCursor(dx,dy){
 function connectButtons(){
  $('#newGame').onclick=newGame;$('#undo').onclick=undoMove;$('#flip').onclick=flipBoard;
  $('#viewToggle').onclick=()=>setView(viewMode==='3d'?'2d':'3d');
- $('#sound').onclick=()=>{void toggleSound()};$('#fullscreenBtn').onclick=()=>{fullscreenStarted=true;void enterFullscreen()};
+ $('#sound').onclick=()=>{void toggleSound()};$('#fullscreenBtn').onclick=()=>{void toggleFullscreen()};
  $('#theme').onchange=e=>{if(busy){e.target.value=theme;return}theme=e.target.value;audio.setTheme(theme);createBoard();drawPieces()};
  $('#mode').onchange=newGame;
  $('#difficulty').onchange=e=>{const p=computerProfile(Number(e.target.value));notice(`Computer strength: ${p.name} · search depth ${p.depth}`);if($('#mode').value==='ai'&&game.turn==='b'&&!busy)queueComputer()};
  $('#menuBtn').onclick=e=>{const c=$('#controls'),open=c.classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',String(open))};
  $('#handUndo').onclick=undoMove;$('#handFlip').onclick=flipBoard;$('#handView').onclick=()=>setView(viewMode==='3d'?'2d':'3d');
- $('#handSound').onclick=()=>{void toggleSound()};$('#handNew').onclick=newGame;$('#handFullscreen').onclick=()=>{fullscreenStarted=true;void enterFullscreen()};
+ $('#handSound').onclick=()=>{void toggleSound()};$('#handNew').onclick=newGame;$('#handFullscreen').onclick=()=>{void toggleFullscreen()};
  $('#handSelect').onclick=()=>{beginPlayFullscreen();void audio.ensure();chooseSquare(handCursor.x,handCursor.y)};
  for(const b of document.querySelectorAll('[data-nav]'))b.onclick=()=>{const dir=b.dataset.nav;if(dir==='up')nudgeCursor(0,-1);if(dir==='down')nudgeCursor(0,1);if(dir==='left')nudgeCursor(-1,0);if(dir==='right')nudgeCursor(1,0)};
  document.addEventListener('fullscreenchange',()=>{$('#fullscreenBtn').textContent=document.fullscreenElement?'Exit full screen':'Full screen';$('#handFullscreen').textContent=document.fullscreenElement?'Exit Full':'Full Screen'});
