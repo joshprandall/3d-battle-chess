@@ -8,6 +8,11 @@ let browser;
 try{
  await delay(1100);
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
+ const desktop=await browser.newPage({viewport:{width:1365,height:850}});
+ await desktop.goto('http://127.0.0.1:8769/?handheld=1',{waitUntil:'domcontentloaded'});
+ await desktop.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
+ assert.equal(await desktop.locator('#handheldConsole').isVisible(),false,'handheld console stays hidden on desktop even with handheld query');
+ await desktop.close();
  const page=await browser.newPage({viewport:{width:390,height:844}});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:8769/?handheld=1',{waitUntil:'domcontentloaded'});
