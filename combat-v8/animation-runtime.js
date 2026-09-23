@@ -44,7 +44,7 @@ export class CombatAnimationRuntime{
   return {
    state:this.state,t,
    rootDrive:this.state==='approach'?(style.drive||.6)*t:0,
-   crouch:this.state==='anticipate'?(heavy?.22:.12)*t:0,
+   crouch:this.state==='anticipate'?(heavy ? .22 : .12)*t:0,
    windup:this.state==='anticipate'?t:0,
    attack:this.state==='commit'?t:this.contact?1:0,
    follow:this.state==='follow-through'?t:0,
