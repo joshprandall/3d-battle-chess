@@ -16,6 +16,8 @@ try{
   const {createV8Character}=await import('./combat-v8/character-factory.js');
   const {poseRig,weaponWorldPoint,hitVolumes}=await import('./combat-v8/rig-types.js');
   const {CHARACTER_SETS,ROLE_ORDER}=await import('./combat-v8/character-definitions.js');
+  const {visualRecipeIds}=await import('./combat-v8/character-visuals.js');
+  const {choreographyIds,choreographyFingerprint}=await import('./combat-v8/choreography.js');
   const signatures=[];
   for(const theme of Object.keys(CHARACTER_SETS))for(const role of ROLE_ORDER){
    const root=createV8Character({t:role,c:'w'},theme);
@@ -26,17 +28,23 @@ try{
    let meshes=0;root.traverse(o=>{if(o.isMesh)meshes++});
    const box=new THREE.Box3().setFromObject(root),size=new THREE.Vector3();box.getSize(size);
    if(!Number.isFinite(tip.x)||vols.length<3||meshes<12)throw Error(`Bad v8 model ${theme}:${role}`);
-   signatures.push({theme,role,name:root.userData.definition.name,rig:root.userData.definition.rig,meshes,size:[size.x,size.y,size.z].map(v=>Number(v.toFixed(3)))});
+   signatures.push({theme,role,name:root.userData.definition.name,rig:root.userData.definition.rig,visual:root.userData.visualSignature,meshes,size:[size.x,size.y,size.z].map(v=>Number(v.toFixed(3)))});
    root.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())});
   }
-  return signatures;
+  return {signatures,visualIds:visualRecipeIds(),choreoIds:choreographyIds(),choreoFingerprints:choreographyIds().map(id=>choreographyFingerprint(id))};
  });
- assert.equal(result.length,30);
- assert.equal(new Set(result.map(x=>x.name)).size,30);
+ assert.equal(result.signatures.length,30);
+ assert.equal(new Set(result.signatures.map(x=>x.name)).size,30);
+ assert.equal(result.visualIds.length,30,'30 authored visual recipes');
+ assert.equal(new Set(result.visualIds).size,30,'visual recipes are unique');
+ assert.equal(result.choreoIds.length,30,'30 authored choreography profiles');
+ assert.equal(new Set(result.choreoFingerprints).size,30,'all 30 attacks have distinct sampled motion fingerprints');
  for(const theme of ['classic','arcane','monsters','brick','cosmic']){
-   const set=result.filter(x=>x.theme===theme);
+   const set=result.signatures.filter(x=>x.theme===theme);
    assert.equal(set.length,6);
    assert.ok(new Set(set.map(x=>x.rig)).size>=3,`${theme} uses multiple rig families`);
+   assert.equal(new Set(set.map(x=>x.visual)).size,6,`${theme} exposes six unique visual identities`);
+   assert.equal(new Set(set.map(x=>`${x.meshes}:${x.size.join(',')}`)).size,6,`${theme} has six distinct rendered silhouettes`);
  }
- console.log('PASS v8 browser: 30 renderable themed characters with articulated rigs and hit volumes');
+ console.log('PASS v8 browser: 30 distinct themed characters, 30 distinct choreographies, articulated rigs and hit volumes');
 }finally{await browser?.close();server.kill();}
