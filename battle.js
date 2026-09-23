@@ -4,6 +4,7 @@ import {ChessGame,chooseComputerMove,computerProfile} from './engine.js';
 import {PALETTES} from './pieces.js';
 import {createCharacter} from './characters.js';
 import {animateDuel} from './duels.js';
+import {animateDuelV8} from './duels-v8.js';
 import {castleAttempt,castleNotation} from './castle-controls.js';
 import {ATTACK_NAMES} from './attacks.js';
 import {GameAudio} from './audio.js';
@@ -15,6 +16,7 @@ let theme='classic',selected=null,legal=[],busy=false,soundOn=true,aiTimer=null,
 let viewMode='3d',flipped=false,handCursor={x:4,y:6},keyboardCursor=false,fullscreenStarted=false,webglReady=false;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const query=new URLSearchParams(location.search);
+const useV8Combat=query.get('combat')==='v8';
 const handheldDevice=()=>{
  const ua=navigator.userAgent||'';
  const explicit=/Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua);
@@ -107,7 +109,8 @@ async function applyMove(m,computer=false,promotion=null){
   const defender=pieceGroup.children.find(o=>o.userData.x===m.nx&&o.userData.y===(enPassant?m.y:m.ny));
   stateEl.textContent=roleNames[p.t]+' '+ATTACK_NAMES[theme][p.t]+'!';
   void audio.move(p.t);
-  await animateDuel({source:attacker,victim:defender,x:m.nx,y:m.ny,theme,role:p.t,fxGroup,camera,orbit,boardGroup,pieceGroup,reducedMotion,onImpact:()=>{void audio.attack(theme,p.t)}});
+  const duelRunner=useV8Combat?animateDuelV8:animateDuel;
+  await duelRunner({source:attacker,victim:defender,x:m.nx,y:m.ny,theme,role:p.t,fxGroup,camera,orbit,boardGroup,pieceGroup,reducedMotion,onImpact:()=>{void audio.attack(theme,p.t)}});
  }
  const move=game.move(m.x,m.y,m.nx,m.ny,promotion||'q');
  if(!move){busy=false;renderStatus();return false}
