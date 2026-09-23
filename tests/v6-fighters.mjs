@@ -10,7 +10,7 @@ try{
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
- await page.goto('http://127.0.0.1:8767/',{waitUntil:'domcontentloaded'});
+ await page.goto('http://127.0.0.1:8767/?combat=v7',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  const rigTest=await page.evaluate(async()=>{
   const {createDuelFighter,poseCharacter,weaponPoint,fighterCenter}=await import('./combatants-v6.js');
