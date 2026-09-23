@@ -209,13 +209,13 @@ function nudgeCursor(dx,dy){
 }
 function connectButtons(){
  $('#newGame').onclick=newGame;$('#undo').onclick=undoMove;$('#flip').onclick=flipBoard;
- $('#viewToggle').onclick=()=>setView(viewMode==='3d'?'2d':'3d');
+ $('#viewToggle').onclick=()=>{void audio.ensure();setView(viewMode==='3d'?'2d':'3d')};
  $('#sound').onclick=()=>{void toggleSound()};$('#fullscreenBtn').onclick=()=>{void toggleFullscreen()};
  $('#theme').onchange=e=>{if(busy){e.target.value=theme;return}theme=e.target.value;audio.setTheme(theme);createBoard();drawPieces()};
  $('#mode').onchange=newGame;
  $('#difficulty').onchange=e=>{const p=computerProfile(Number(e.target.value));notice(`Computer strength: ${p.name} · search depth ${p.depth}`);if($('#mode').value==='ai'&&game.turn==='b'&&!busy)queueComputer()};
  $('#menuBtn').onclick=e=>{const c=$('#controls'),open=c.classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',String(open))};
- $('#handUndo').onclick=undoMove;$('#handFlip').onclick=flipBoard;$('#handView').onclick=()=>setView(viewMode==='3d'?'2d':'3d');
+ $('#handUndo').onclick=undoMove;$('#handFlip').onclick=flipBoard;$('#handView').onclick=()=>{void audio.ensure();setView(viewMode==='3d'?'2d':'3d')};
  $('#handSound').onclick=()=>{void toggleSound()};$('#handNew').onclick=newGame;$('#handFullscreen').onclick=()=>{void toggleFullscreen()};
  $('#handSelect').onclick=()=>{beginPlayFullscreen();void audio.ensure();chooseSquare(handCursor.x,handCursor.y)};
  for(const b of document.querySelectorAll('[data-nav]'))b.onclick=()=>{const dir=b.dataset.nav;if(dir==='up')nudgeCursor(0,-1);if(dir==='down')nudgeCursor(0,1);if(dir==='left')nudgeCursor(-1,0);if(dir==='right')nudgeCursor(1,0)};
