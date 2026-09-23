@@ -1,2 +1,2 @@
-// Keep the board's stable duel entry point; only the capture animation changes.
-export {animateDuel} from './duels-v6.js';
+// Leave the staged v6 physics in place; add role-dependent move/strike sounds.
+export {animateDuel} from './duels-v7-audio.js';
