@@ -20,7 +20,7 @@ export class AttackExecutorV8{
   if(this.resolved)return null;this.resolved=true;
   const style=this.attack.style||{};
   const multiplier=style.heavy?2.2:style.multiHit?1.35:1.25;
-  return {attack:this.attack,hit,impulse:impulseFromStrike({previous,current,mass,multiplier,lift:style.leap?.18:.10})};
+  return {attack:this.attack,hit,impulse:impulseFromStrike({previous,current,mass,multiplier,lift:style.leap ? .18 : .10})};
  }
  update({dt,state,attackerPosition,weaponTip,defenderVolumes,mass=1}){
   if(this.resolved)return null;
