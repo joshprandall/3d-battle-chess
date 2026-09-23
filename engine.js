@@ -25,4 +25,71 @@ export class ChessGame{
  move(x,y,nx,ny,promotion='q'){if(this.status().over)return null;const m=this.legalMoves(x,y).find(a=>a.nx===nx&&a.ny===ny);if(!m||!['q','r','b','n'].includes(promotion))return null;const s=this.snapshot(),p=this.piece(x,y),target=this.piece(nx,ny),epCapture=p.t==='p'&&this.ep?.x===nx&&this.ep?.y===ny&&!target,captured=epCapture?this.piece(nx,y):target;this.board[ny][nx]={...p};this.board[y][x]=null;if(epCapture)this.board[y][nx]=null;if(p.t==='k'){this.castling[p.c].k=false;this.castling[p.c].q=false;if(Math.abs(nx-x)===2){const rx=nx===6?7:0,tx=nx===6?5:3;this.board[y][tx]=this.board[y][rx];this.board[y][rx]=null}}if(p.t==='r'&&y===(p.c==='w'?7:0)){if(x===0)this.castling[p.c].q=false;if(x===7)this.castling[p.c].k=false}if(captured?.t==='r'&&ny===(captured.c==='w'?7:0)){if(nx===0)this.castling[captured.c].q=false;if(nx===7)this.castling[captured.c].k=false}this.ep=p.t==='p'&&Math.abs(ny-y)===2?{x,y:(ny+y)/2}:null;const promoted=p.t==='p'&&(ny===0||ny===7);if(promoted)this.board[ny][nx].t=promotion;this.halfmove=(p.t==='p'||captured)?0:this.halfmove+1;const castle=p.t==='k'&&Math.abs(nx-x)===2,note=castle?(nx===6?'O-O':'O-O-O'):(p.t==='p'?(captured?String.fromCharCode(97+x):''):p.t.toUpperCase())+(captured?'x':'')+keySq(nx,ny)+(promoted?'='+promotion.toUpperCase():'');const entry={color:p.c,piece:p.t,from:keySq(x,y),to:keySq(nx,ny),captured:captured?.t||null,notation:note,promotion:promoted?promotion:null,castle,epCapture};if(this.turn==='b')this.fullmove++;this.turn=opposite(this.turn);this.history.push(s);this.moves.push(entry);this.recordPosition();const status=this.status();entry.notation+=status.kind==='checkmate'?'#':status.check?'+':'';return entry}
  undo(){const s=this.history.pop();if(!s)return false;this.restore(s);return true}
 }
-export function chooseComputerMove(game,depth=2){const values={p:100,n:320,b:330,r:500,q:900,k:0};const evaluate=()=>{let sum=0;for(let y=0;y<8;y++)for(let x=0;x<8;x++){const p=game.piece(x,y);if(p)sum+=(p.c==='b'?1:-1)*(values[p.t]+(p.t==='p'?(p.c==='b'?y:7-y)*3:0))}return sum};function search(ply,alpha,beta){const st=game.status();if(st.over)return st.winner==='b'?100000+ply:st.winner==='w'?-100000-ply:0;if(ply===0)return evaluate();const maximizing=game.turn==='b';let best=maximizing?-Infinity:Infinity;const options=game.allLegal().sort((a,b)=>(game.piece(b.nx,b.ny)?1:0)-(game.piece(a.nx,a.ny)?1:0));for(const m of options){game.move(m.x,m.y,m.nx,m.ny);const v=search(ply-1,alpha,beta);game.undo();best=maximizing?Math.max(best,v):Math.min(best,v);if(maximizing)alpha=Math.max(alpha,best);else beta=Math.min(beta,best);if(beta<=alpha)break}return best}const options=game.allLegal();let top=-Infinity,best=[];for(const m of options){game.move(m.x,m.y,m.nx,m.ny);const v=search(Math.max(0,depth-1),-Infinity,Infinity);game.undo();if(v>top){top=v;best=[m]}else if(v===top)best.push(m)}return best[Math.floor(Math.random()*best.length)]||null}
+export function computerProfile(level=2){
+ const n=Math.max(1,Math.min(3,Number(level)||2));
+ return n===1?{level:1,name:'Recruit',depth:1,window:260}:n===3?{level:3,name:'Champion',depth:3,window:0}:{level:2,name:'Warrior',depth:2,window:55};
+}
+export function chooseComputerMove(game,level=2){
+ const profile=computerProfile(level),values={p:100,n:320,b:330,r:500,q:900,k:0};
+ const positional=(p,x,y)=>{
+  const center=(3.5-Math.abs(x-3.5))+(3.5-Math.abs(y-3.5));
+  const advance=p.t==='p'?(p.c==='b'?y:7-y)*5:0;
+  const centerWeight={p:2,n:8,b:5,r:1,q:2,k:-1}[p.t]||0;
+  const development=(p.t==='n'||p.t==='b')&&((p.c==='b'&&y>0)||(p.c==='w'&&y<7))?10:0;
+  return advance+center*centerWeight+development;
+ };
+ const evaluate=()=>{
+  let sum=0;
+  for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+   const p=game.piece(x,y);if(!p)continue;
+   const v=values[p.t]+positional(p,x,y);
+   sum+=(p.c==='b'?1:-1)*v;
+  }
+  return sum;
+ };
+ const ordering=m=>{
+  const target=game.piece(m.nx,m.ny),piece=game.piece(m.x,m.y);
+  return (target?values[target.t]+120:0)+(piece?.t==='p'&&(m.ny===0||m.ny===7)?800:0);
+ };
+ function search(ply,alpha,beta){
+  const st=game.status();
+  if(st.over)return st.winner==='b'?100000+ply:st.winner==='w'?-100000-ply:0;
+  if(ply===0)return evaluate();
+  const maximizing=game.turn==='b';let best=maximizing?-Infinity:Infinity;
+  const options=game.allLegal().sort((a,b)=>ordering(b)-ordering(a));
+  for(const m of options){
+   game.move(m.x,m.y,m.nx,m.ny);
+   const v=search(ply-1,alpha,beta);
+   game.undo();
+   best=maximizing?Math.max(best,v):Math.min(best,v);
+   if(maximizing)alpha=Math.max(alpha,best);else beta=Math.min(beta,best);
+   if(beta<=alpha)break;
+  }
+  return best;
+ }
+ const options=game.allLegal();
+ if(!options.length)return null;
+ const scored=[];
+ for(const m of options){
+  game.move(m.x,m.y,m.nx,m.ny);
+  const v=search(Math.max(0,profile.depth-1),-Infinity,Infinity);
+  game.undo();
+  scored.push({m,v});
+ }
+ scored.sort((a,b)=>b.v-a.v);
+ const top=scored[0].v;
+ const candidates=scored.filter(s=>top-s.v<=profile.window);
+ if(profile.level===1){
+  // Recruit intentionally varies among plausible moves instead of always finding the engine's top line.
+  const pool=candidates.slice(0,Math.min(10,candidates.length));
+  return pool[Math.floor(Math.random()*pool.length)]?.m||scored[0].m;
+ }
+ if(profile.level===2){
+  // Warrior keeps modest variety while avoiding obvious large material losses.
+  const pool=candidates.slice(0,Math.min(4,candidates.length));
+  return pool[Math.floor(Math.random()*pool.length)]?.m||scored[0].m;
+ }
+ // Champion searches deepest and only randomizes exact ties.
+ const best=scored.filter(s=>s.v===top);
+ return best[Math.floor(Math.random()*best.length)]?.m||scored[0].m;
+}
