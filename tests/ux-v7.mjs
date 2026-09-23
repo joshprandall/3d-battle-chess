@@ -71,10 +71,10 @@ try{
  assert.ok(await page.locator('#scene').isVisible(),'handheld console switches back to 3D');
  assert.equal(await page.locator('#board2d').isVisible(),false,'2D board hides after switch back');
 
- await page.locator('[data-nav="up"]').click();
- await page.locator('#handSelect').click();
- assert.match(await page.locator('#handheldStatus').textContent(),/Cursor/,'handheld cursor and select controls remain active');
+ assert.equal(await page.locator('[data-nav]').count(),0,'handheld console has no directional pad');
+ assert.equal(await page.locator('#handSelect').count(),0,'handheld console has no Select button');
+ assert.match(await page.locator('#handheldStatus').textContent(),/Tap the board|Selected/,'handheld status directs touch play');
  assert.deepEqual(errors,[],'no uncaught browser errors');
  await mobileContext.close();
- console.log('PASS v7 UX: device-only handheld UI, keyboard-only desktop play, immersive fullscreen fit, 2D↔3D, audio gating and AI strength');
+ console.log('PASS v7 UX: touch-first handheld toolbar without D-pad, keyboard-only desktop play, immersive fullscreen fit, 2D↔3D, audio gating and AI strength');
 }finally{await browser?.close();server.kill();}
