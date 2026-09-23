@@ -11,10 +11,10 @@ import {ATTACK_NAMES} from './attacks.js';
 import {GameAudio} from './audio.js';
 
 const $=s=>document.querySelector(s);
-const sceneEl=$('#scene'),board2d=$('#board2d'),logEl=$('#log'),turnEl=$('#turn'),stateEl=$('#state'),gameShell=$('#gameShell'),game=new ChessGame(),audio=new GameAudio();
+const sceneEl=$('#scene'),board2d=$('#board2d'),logEl=$('#log'),turnEl=$('#turn'),stateEl=$('#state'),gameShell=$('#gameShell'),setupScreen=$('#setupScreen'),rotateGate=$('#rotateGate'),game=new ChessGame(),audio=new GameAudio();
 const themes=PALETTES;
 let theme='classic',selected=null,legal=[],busy=false,soundOn=true,aiTimer=null,generation=0,toastTimer=null,scene,camera,renderer,orbit,boardGroup,pieceGroup,fxGroup;
-let viewMode='3d',flipped=false,handCursor={x:4,y:6},keyboardCursor=false,fullscreenStarted=false,webglReady=false;
+let viewMode='3d',flipped=false,handCursor={x:4,y:6},keyboardCursor=false,fullscreenStarted=false,webglReady=false,initialized=false,started=false;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const query=new URLSearchParams(location.search);
 const useV8Combat=query.get('combat')!=='v7';
@@ -32,7 +32,62 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const handheldActive=()=>handheldDevice();
 const cursorVisible=()=>keyboardCursor;
 const nativeFullscreenElement=()=>document.fullscreenElement||document.webkitFullscreenElement||null;
+
 const fullscreenActive=()=>!!nativeFullscreenElement()||gameShell.classList.contains('immersive-fullscreen');
+const needsLandscape=()=>handheldActive()&&window.innerHeight>window.innerWidth;
+function updateRotateGate(){
+ if(!rotateGate)return;
+ const active=started&&needsLandscape();
+ rotateGate.classList.toggle('active',active);
+ rotateGate.setAttribute('aria-hidden',String(!active));
+}
+function syncSoundUI(){
+ $('#sound').textContent=soundOn?'Sound on':'Sound off';
+ $('#sound').setAttribute('aria-pressed',String(soundOn));
+ $('#handSound').textContent=soundOn?'Sound on':'Sound off';
+}
+function syncSetupDifficulty(){
+ const local=$('#setupMode')?.value==='local';
+ if($('#setupDifficulty'))$('#setupDifficulty').disabled=local;
+}
+async function launchFromSetup(){
+ const mode=$('#setupMode').value;
+ const nextTheme=$('#setupTheme').value;
+ const difficulty=$('#setupDifficulty').value;
+ const nextView=$('#setupView').value;
+ const nextSound=$('#setupSound').checked;
+ $('#mode').value=mode;$('#theme').value=nextTheme;$('#difficulty').value=difficulty;
+ theme=nextTheme;viewMode=nextView;soundOn=nextSound;
+ setupScreen.classList.add('hidden');gameShell.classList.remove('hidden');gameShell.setAttribute('aria-hidden','false');
+ document.body.classList.add('playing');started=true;fullscreenStarted=true;
+ void enterFullscreen();
+ const wasInitialized=initialized;
+ init();
+ await audio.setEnabled(soundOn);syncSoundUI();
+ if(wasInitialized){
+  audio.setTheme(theme);createBoard();newGame();setView(viewMode,false);
+ }else{
+  setView(viewMode,false);
+ }
+ updateRotateGate();
+ requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));
+}
+async function exitToSetup(){
+ if(busy)return;
+ await exitFullscreen();
+ started=false;fullscreenStarted=false;
+ document.body.classList.remove('playing','immersive-lock');
+ gameShell.classList.add('hidden');gameShell.setAttribute('aria-hidden','true');
+ setupScreen.classList.remove('hidden');
+ $('#controls').classList.remove('open');$('#menuBtn').setAttribute('aria-expanded','false');
+ updateRotateGate();$('#startGameBtn')?.focus();
+}
+function connectSetup(){
+ syncSetupDifficulty();
+ $('#setupMode').addEventListener('change',syncSetupDifficulty);
+ $('#startGameBtn').addEventListener('click',()=>void launchFromSetup());
+ window.addEventListener('orientationchange',()=>setTimeout(updateRotateGate,120));
+}
 
 function material(color,glow=0){return new THREE.MeshStandardMaterial({color,roughness:.4,metalness:theme==='cosmic'?.65:.16,emissive:glow,emissiveIntensity:.35})}
 function clearGroup(group){if(!group)return;while(group.children.length){const item=group.children[0];group.remove(item);item.traverse(node=>{node.geometry?.dispose();if(node.material)(Array.isArray(node.material)?node.material:[node.material]).forEach(m=>m.dispose())})}}
@@ -272,7 +327,7 @@ function boardKeyboard(e){
  if(key==='escape'&&gameShell.classList.contains('immersive-fullscreen')){e.preventDefault();void exitFullscreen();return}
 }
 function connectButtons(){
- $('#newGame').onclick=newGame;$('#undo').onclick=undoMove;$('#flip').onclick=flipBoard;
+ $('#newGame').onclick=newGame;$('#undo').onclick=undoMove;$('#flip').onclick=flipBoard;$('#exitGame').onclick=()=>{void exitToSetup()};
  $('#viewToggle').onclick=()=>{void audio.ensure();setView(viewMode==='3d'?'2d':'3d')};
  $('#sound').onclick=()=>{void toggleSound()};$('#fullscreenBtn').onclick=()=>{void toggleFullscreen()};
  $('#theme').onchange=e=>{if(busy){e.target.value=theme;return}theme=e.target.value;audio.setTheme(theme);createBoard();drawPieces()};
@@ -306,10 +361,12 @@ function init3D(){
  return true;
 }
 function init(){
+ if(initialized)return;
+ initialized=true;
  document.body.classList.toggle('handheld-active',handheldActive());
- window.addEventListener('resize',()=>{document.body.classList.toggle('handheld-active',handheldActive());render2D()});
+ window.addEventListener('resize',()=>{document.body.classList.toggle('handheld-active',handheldActive());render2D();updateRotateGate()});
  audio.setTheme(theme);audio.setMode(viewMode);connectButtons();
  const ok=init3D();drawPieces();renderStatus();
- if(!ok)setView('2d',false);else if(query.get('view')==='2d')setView('2d',false);else setView('3d',false);
+ if(!ok)setView('2d',false);else setView(viewMode,false);
 }
-init();
+connectSetup();
