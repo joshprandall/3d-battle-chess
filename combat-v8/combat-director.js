@@ -8,6 +8,7 @@ import {body,applyImpulse,integrate,driveToward} from './physics.js';
 import {AttackExecutorV8} from './attack-executor.js';
 import {choreographyPose} from './choreography.js';
 import {defeatPose} from './defeat-choreography.js';
+import {CombatEffectsV8} from './effects.js';
 
 const roleMass=role=>({p:.85,n:1.08,b:.96,r:2.45,q:1.20,k:1.58})[role]||1;
 
@@ -20,6 +21,7 @@ export class CombatDirectorV8{
   this.defender=createV8Character(defender,theme);
   this.runtime=new CombatAnimationRuntime(this.attackerDef);
   this.executor=new AttackExecutorV8(this.attackerDef.attack);
+  this.effects=new CombatEffectsV8(theme,this.attackerDef.attack);this.effectsGroup=this.effects.group;
   this.aBody=body({x:-1.35,mass:this.attackerDef.mass||roleMass(attacker.t),drag:4.8});
   this.dBody=body({x:1.35,mass:this.defenderDef.mass||roleMass(defender.t),drag:3.5});
   this.contact=null;this.elapsed=0;
@@ -58,6 +60,16 @@ export class CombatDirectorV8{
     this.onContact(this.contact);
    }
   }
-  return {pose,contact:this.contact,complete:this.runtime.complete,attacker:this.attacker,defender:this.defender,attack:this.runtime.attack};
+  this.effects.update({
+   pose,executor:this.executor,
+   attackerPosition:{x:this.attacker.position.x,y:this.attacker.position.y,z:this.attacker.position.z},
+   weaponTip:{x:tip.x,y:tip.y,z:tip.z},
+   defenderPosition:{x:this.defender.position.x,y:this.defender.position.y+1,z:this.defender.position.z},
+   contact:this.contact,elapsed:this.elapsed
+  });
+  return {pose,contact:this.contact,complete:this.runtime.complete,attacker:this.attacker,defender:this.defender,attack:this.runtime.attack,effects:this.effectsGroup};
+ }
+ dispose(){this.effects?.dispose();}
+}
  }
 }
