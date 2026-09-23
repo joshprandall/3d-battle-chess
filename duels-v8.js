@@ -17,7 +17,7 @@ export function animateDuelV8({source,victim,theme='classic',role='p',fxGroup,ca
  const floor=new THREE.Mesh(new THREE.CylinderGeometry(3.25,3.42,.19,48),material(theme==='monsters'?0x25352a:theme==='cosmic'?0x172b42:0x283949));floor.position.y=-.15;floor.receiveShadow=true;arena.add(floor);
  const ring=new THREE.Mesh(new THREE.TorusGeometry(2.55,.03,7,72),material(palette.glow,palette.glow));ring.rotation.x=Math.PI/2;ring.position.y=-.045;arena.add(ring);
  const director=new CombatDirectorV8({attacker,defender,theme,onContact:()=>{onImpact?.();}});
- director.attacker.scale.setScalar(1.48);director.defender.scale.setScalar(1.48);director.effectsGroup.scale.setScalar(1.48);
+ director.attacker.scale.setScalar(1.48);director.defender.scale.setScalar(1.48);
  arena.add(director.attacker,director.defender,director.effectsGroup);
 
  const stage=document.querySelector('.stage'),ui=document.createElement('div');ui.className='duel-ui v8-duel-ui';
