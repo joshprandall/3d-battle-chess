@@ -10,12 +10,14 @@ try{
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
  const desktop=await browser.newPage({viewport:{width:1365,height:850}});
  await desktop.goto('http://127.0.0.1:8769/?handheld=1&combat=v7',{waitUntil:'domcontentloaded'});
+ assert.ok(await desktop.locator('#setupScreen').isVisible(),'desktop opens on setup');
+ await desktop.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
+ await desktop.locator('#setupMode').selectOption('local');
+ await desktop.locator('#startGameBtn').click();
  await desktop.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  assert.equal(await desktop.locator('#handheldConsole').isVisible(),false,'handheld console stays hidden on desktop even with handheld query');
- await desktop.locator('#mode').selectOption('local');
- await desktop.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
+ assert.equal(await desktop.locator('#gameShell').getAttribute('data-fullscreen-requested'),'yes','Start requests fullscreen on desktop');
  await desktop.keyboard.press('Enter');
- assert.equal(await desktop.locator('#gameShell').getAttribute('data-fullscreen-requested'),'yes','first keyboard play input requests fullscreen on desktop');
  await desktop.keyboard.press('ArrowUp');await desktop.keyboard.press('ArrowUp');await desktop.keyboard.press('Enter');
  await desktop.waitForFunction(()=>document.querySelectorAll('#log li').length===1,null,{timeout:5000});
  assert.match(await desktop.locator('#log li').first().textContent(),/e4/,'desktop game is fully playable without a mouse');
@@ -30,18 +32,22 @@ try{
  const page=await mobileContext.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:8769/?combat=v7',{waitUntil:'domcontentloaded'});
- await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
-
- assert.ok(await page.locator('#handheldConsole').isVisible(),'handheld console appears automatically on a phone/tablet');
- await page.locator('#menuBtn').click();await page.locator('#mode').selectOption('local');await page.locator('#menuBtn').click();
+ assert.ok(await page.locator('#setupScreen').isVisible(),'phone opens on setup');
  await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
+ await page.locator('#setupMode').selectOption('local');
+ await page.locator('#startGameBtn').click();
+ await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
+ assert.match(await page.locator('#rotateGate').getAttribute('class'),/active/,'portrait phone is gated until landscape');
+ await page.setViewportSize({width:844,height:390});
+ await page.waitForFunction(()=>!document.querySelector('#rotateGate')?.classList.contains('active'));
+ assert.ok(await page.locator('#handheldConsole').isVisible(),'handheld console appears automatically on a phone/tablet');
  await page.locator('#handView').click();
  assert.ok(await page.locator('#board2d').isVisible(),'2D board is visible after toggle');
  assert.equal(await page.locator('#board2d .square2d').count(),64,'2D board renders 64 interactive squares');
  assert.equal(await page.locator('#scene').isVisible(),false,'3D scene hides in 2D mode');
 
  await page.locator('.square2d[data-x="4"][data-y="6"]').click();
- assert.equal(await page.locator('#gameShell').getAttribute('data-fullscreen-requested'),'yes','first handheld play input requests fullscreen');
+ assert.equal(await page.locator('#gameShell').getAttribute('data-fullscreen-requested'),'yes','Start requests fullscreen on handheld devices');
  await page.locator('.square2d[data-x="4"][data-y="4"]').click();
  await page.waitForFunction(()=>document.querySelectorAll('#log li').length===1,null,{timeout:5000});
  assert.match(await page.locator('#log li').first().textContent(),/e4/,'2D board makes legal moves with the same chess engine');

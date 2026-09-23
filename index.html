@@ -6,10 +6,41 @@
 <link rel="stylesheet" href="styles.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head><body>
-<nav class="site-nav" aria-label="Return to portfolio"><a id="backToProjects" href="https://web.engr.oregonstate.edu/~randjosh/projects.html">&larr; Back to Projects</a><a id="backToHome" href="https://web.engr.oregonstate.edu/~randjosh/">Website Home &nearr;</a></nav>
-<div id="gameShell" class="game-shell">
+<section id="setupScreen" class="setup-screen" aria-labelledby="setupTitle">
+  <a class="game-brand" href="https://web.engr.oregonstate.edu/~randjosh/" aria-label="Joshua Randall portfolio home"><span>JR</span><strong>Joshua Randall</strong></a>
+  <div class="setup-panel">
+    <p class="setup-kicker">BROWSER GAME / 3D BATTLE CHESS</p>
+    <h1 id="setupTitle">Choose your battle.</h1>
+    <p class="setup-lead">Configure the match, then launch the board as a dedicated game experience. Your browser will enter full screen when it permits it; phones and tablets play in landscape.</p>
+    <div class="setup-grid">
+      <label>Mode
+        <select id="setupMode"><option value="ai">Vs Computer</option><option value="local">Local 2 Player</option></select>
+      </label>
+      <label>Battle Set
+        <select id="setupTheme"><option value="classic">Classic</option><option value="arcane">Arcane</option><option value="monsters">Monsters</option><option value="brick">Brick Battle</option><option value="cosmic">Cosmic War</option></select>
+      </label>
+      <label>Computer strength
+        <select id="setupDifficulty"><option value="1">Recruit</option><option value="2" selected>Warrior</option><option value="3">Champion</option></select>
+      </label>
+      <label>Board
+        <select id="setupView"><option value="3d" selected>3D Battle Board</option><option value="2d">2D Board</option></select>
+      </label>
+      <label class="setup-toggle"><input id="setupSound" type="checkbox" checked> <span>Sound enabled</span></label>
+    </div>
+    <div class="setup-actions">
+      <button id="startGameBtn" class="start-game" type="button">START GAME ↗</button>
+    </div>
+    <details class="setup-help">
+      <summary>How to play</summary>
+      <p>Tap or click a piece, then a highlighted square. Desktop players can use Arrow keys or W/A/S/D to move the board cursor and Enter/Space to select. V switches 2D/3D, F flips the board, U undoes, M toggles sound, and N starts a new game.</p>
+      <p>All normal chess rules are enforced, including check, checkmate, castling, en passant, promotion, stalemate, repetition, and the fifty-move rule.</p>
+    </details>
+  </div>
+</section>
+
+<div id="gameShell" class="game-shell hidden" aria-hidden="true">
 <header class="topbar"><div><h1>3D Battle Chess</h1><p>Strategy becomes spectacle.</p></div>
-<button id="menuBtn" class="menu" aria-controls="controls" aria-expanded="false">☰ Controls</button>
+<button id="menuBtn" class="menu" aria-controls="controls" aria-expanded="false">☰ Game Menu</button>
 <div class="controls" id="controls">
 <label>Mode <select id="mode"><option value="ai">Vs Computer</option><option value="local">Local 2 Player</option></select></label>
 <label>Battle Set <select id="theme"><option value="classic">Classic</option><option value="arcane">Arcane</option><option value="monsters">Monsters</option><option value="brick">Brick Battle</option><option value="cosmic">Cosmic War</option></select></label>
@@ -18,10 +49,12 @@
 <button id="viewToggle" type="button" aria-pressed="false">Use 2D board</button>
 <button id="sound" type="button" aria-pressed="true">Sound on</button>
 <button id="fullscreenBtn" type="button">Full screen</button>
+<button id="exitGame" type="button">Exit to setup</button>
 </div></header>
 <main><section class="stage"><div id="scene" role="application" tabindex="0" aria-label="Interactive three-dimensional chessboard"></div><div id="board2d" class="board2d hidden" role="grid" aria-label="Interactive two-dimensional chessboard"></div><div class="hud" aria-live="polite"><span id="turn">White to move</span><span id="state">Loading board…</span></div></section>
 <aside class="panel"><h2>Battle Log</h2><ol id="log" aria-label="Move history"></ol><h2>How to Play</h2>
-<p>Desktop: use the mouse, or play entirely from the keyboard with Arrow keys or W/A/S/D to move the board cursor and Enter/Space to select. V switches 2D/3D, F flips, U undoes, M toggles sound, and N starts a new game. The first play input enters immersive full screen; Esc exits.</p><p>Phone/tablet: tap pieces and highlighted squares directly. The compact handheld toolbar provides game actions only. The game enters full screen from your first play input when the browser permits it.</p>
+<p>Desktop: use the mouse, or play entirely from the keyboard with Arrow keys or W/A/S/D to move the board cursor and Enter/Space to select. V switches 2D/3D, F flips, U undoes, M toggles sound, and N starts a new game. Esc exits native full screen.</p>
+<p>Phone/tablet: rotate to landscape, then tap pieces and highlighted squares directly. The compact handheld toolbar provides game actions only.</p>
 <p>Legal moves, check, checkmate, castling, en passant, pawn promotion, stalemate and standard draws are enforced.</p>
 <div class="legend"><span>● Selected piece</span><span>● Legal move</span><span>● Capture</span></div>
 <label for="moveInput">Keyboard move entry (e.g. e2e4)</label><form id="moveForm"><input id="moveInput" type="text" minlength="4" maxlength="5" autocomplete="off" spellcheck="false" placeholder="e2e4" aria-label="Coordinate move"><button type="submit">Move</button></form><p>For promotion, enter e7e8q, e7e8r, e7e8b or e7e8n. Castling accepts O-O and O-O-O.</p>
@@ -34,6 +67,7 @@
 <button id="handView" type="button">2D / 3D</button><button id="handSound" type="button">Sound</button>
 <button id="handNew" type="button">New Game</button><button id="handFullscreen" type="button">Full Screen</button>
 </div></div></section>
+<div id="rotateGate" class="rotate-gate" role="status" aria-live="polite"><div><span class="rotate-icon" aria-hidden="true">↻</span><strong>Rotate your device</strong><p>Battle Chess plays in landscape on phones and tablets.</p></div></div>
 <div id="promotion" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="promotionTitle"><div class="dialog"><h2 id="promotionTitle">Promote Pawn</h2><div id="promotionChoices"></div></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
 </div>
