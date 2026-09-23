@@ -4,7 +4,7 @@ import {getCharacterDefinition} from './combat-v8/character-definitions.js';
 import {PALETTES} from './pieces.js';
 
 const STEP=1/120;
-const material=(color,emissive=0)=>new THREE.MeshStandardMaterial({color,roughness:.56,metalness:.24,emissive,emissiveIntensity:emissive?.30:0});
+const material=(color,emissive=0)=>new THREE.MeshStandardMaterial({color,roughness:.56,metalness:.24,emissive,emissiveIntensity:emissive ? .30 : 0});
 
 export function animateDuelV8({source,victim,theme='classic',role='p',fxGroup,camera,orbit,boardGroup,pieceGroup,reducedMotion=false,onImpact}){
  if(!source||!victim||reducedMotion){onImpact?.();return Promise.resolve({impacts:1,skipped:!!reducedMotion,v8:true});}
