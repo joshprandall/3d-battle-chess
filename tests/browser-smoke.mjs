@@ -20,6 +20,8 @@ try{
  for(const role of ['p','n','b','r','q','k'])assert.ok(new Set(Object.values(designs).map(d=>d[role])).size>=4,'unique silhouettes for '+role);
  mkdirSync('artifacts',{recursive:true});await page.screenshot({path:'artifacts/desktop.png',fullPage:true});
  await page.locator('#mode').selectOption('local');
+ // Auto-fullscreen is tested in ux-v7; keep the smoke harness windowed so it can inspect the side controls.
+ await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
  async function move(coordinate){await page.locator('#moveInput').fill(coordinate);await page.locator('#moveForm button').click()}
  await move('e2e4');await move('d7d5');await move('e4d5');
  await page.waitForFunction(()=>document.querySelectorAll('#log li').length===3,{timeout:10000});
