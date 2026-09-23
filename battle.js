@@ -22,13 +22,12 @@ const handheldDevice=()=>{
  const coarseTouch=navigator.maxTouchPoints>0&&matchMedia('(pointer: coarse)').matches&&Math.min(screen.width,screen.height)<=1024;
  return explicit||ipadDesktopUA||coarseTouch;
 };
-const forcedHandheld=query.get('handheld')==='1'&&handheldDevice();
 const glyphs={w:{p:'♙',n:'♘',b:'♗',r:'♖',q:'♕',k:'♔'},b:{p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'}};
 const roleNames={p:'Pawn',n:'Knight',b:'Bishop',r:'Rook',q:'Queen',k:'King'};
 const coord=(x,y)=>String.fromCharCode(97+x)+(8-y);
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const handheldActive=()=>handheldDevice();
-const cursorVisible=()=>handheldActive()||keyboardCursor;
+const cursorVisible=()=>keyboardCursor;
 const nativeFullscreenElement=()=>document.fullscreenElement||document.webkitFullscreenElement||null;
 const fullscreenActive=()=>!!nativeFullscreenElement()||gameShell.classList.contains('immersive-fullscreen');
 
@@ -231,8 +230,8 @@ function setView(mode,announce=true){
  if(announce)notice(viewMode==='2d'?'2D board · background music only':'3D board · character and attack sound enabled');
 }
 function updateHandheldStatus(){
- const p=game.piece(handCursor.x,handCursor.y),el=$('#handheldStatus');if(!el)return;
- el.textContent=`Cursor ${coord(handCursor.x,handCursor.y)}${p?' · '+(p.c==='w'?'White ':'Black ')+roleNames[p.t]:''}`;
+ const el=$('#handheldStatus');if(!el)return;
+ el.textContent=selected?`Selected ${coord(selected.x,selected.y)} · tap a highlighted square`:'Tap the board to play';
 }
 function nudgeCursor(dx,dy){
  if(flipped){dx*=-1;dy*=-1}
@@ -272,8 +271,6 @@ function connectButtons(){
  $('#menuBtn').onclick=e=>{const c=$('#controls'),open=c.classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',String(open))};
  $('#handUndo').onclick=undoMove;$('#handFlip').onclick=flipBoard;$('#handView').onclick=()=>{void audio.ensure();setView(viewMode==='3d'?'2d':'3d')};
  $('#handSound').onclick=()=>{void toggleSound()};$('#handNew').onclick=newGame;$('#handFullscreen').onclick=()=>{void toggleFullscreen()};
- $('#handSelect').onclick=()=>{beginPlayFullscreen();void audio.ensure();chooseSquare(handCursor.x,handCursor.y)};
- for(const b of document.querySelectorAll('[data-nav]'))b.onclick=()=>{const dir=b.dataset.nav;if(dir==='up')nudgeCursor(0,-1);if(dir==='down')nudgeCursor(0,1);if(dir==='left')nudgeCursor(-1,0);if(dir==='right')nudgeCursor(1,0)};
  document.addEventListener('fullscreenchange',syncFullscreenUI);
  document.addEventListener('webkitfullscreenchange',syncFullscreenUI);
  document.addEventListener('keydown',e=>{
