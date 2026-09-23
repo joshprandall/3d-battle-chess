@@ -11,6 +11,10 @@ try{
  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.goto('http://127.0.0.1:8767/?combat=v7',{waitUntil:'domcontentloaded'});
+ await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
+ await page.locator('#setupMode').selectOption('local');
+ await page.locator('#startGameBtn').click();
+ await page.setViewportSize({width:844,height:390});
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  const rigTest=await page.evaluate(async()=>{
   const {createDuelFighter,poseCharacter,weaponPoint,fighterCenter}=await import('./combatants-v6.js');
@@ -29,9 +33,7 @@ try{
  });
  assert.equal(rigTest.models,60,'all six roles in five themes for both sides have multi-joint fighters');
  assert.ok(rigTest.travel>12,'weapons travel through a meaningful arc');
- // Fullscreen behavior has dedicated v7 coverage; keep this fighter harness windowed.
- await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'}});
- await page.locator('#menuBtn').click();await page.locator('#mode').selectOption('local');await page.locator('#menuBtn').click();
+ // Fullscreen behavior has dedicated v7 coverage; this harness starts through the real setup flow.
  const move=async text=>{await page.locator('#moveInput').fill(text);await page.locator('#moveForm button').click()};
  await move('e2e4');await move('d7d5');
  await move('e4d5');await page.locator('.duel-ui').waitFor({timeout:12000});
