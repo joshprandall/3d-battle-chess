@@ -10,7 +10,7 @@ try{
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
  const page=await browser.newPage({viewport:{width:1280,height:820}});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('http://127.0.0.1:8772/?combat=v8',{waitUntil:'domcontentloaded'});
+ await page.goto('http://127.0.0.1:8772/',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
  await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=async function(){this.dataset.fullscreenRequested='yes'};});
  await page.locator('#mode').selectOption('local');
@@ -33,5 +33,11 @@ try{
  assert.match(await page.locator('#log li').nth(2).textContent(),/d5/,'capture returns control to chess engine and commits the move');
  assert.equal(await page.locator('#state').textContent(),'Battle in progress');
  assert.deepEqual(errors,[],'v8 capture path has no uncaught browser errors');
- console.log('PASS v8 game integration: legal capture launches v8 duel and returns safely to chess state');
+ const boardIdentity=await page.evaluate(()=>window.__unused=0); // keep page settled before fallback validation
+ const fallback=await browser.newPage({viewport:{width:1000,height:700}});
+ await fallback.goto('http://127.0.0.1:8772/?combat=v7',{waitUntil:'domcontentloaded'});
+ await fallback.waitForFunction(()=>document.querySelector('#state')?.textContent==='Battle in progress',null,{timeout:45000});
+ assert.equal(await fallback.evaluate(()=>document.querySelectorAll('#scene canvas').length),1,'v7 fallback still initializes');
+ await fallback.close();
+ console.log('PASS v8 game integration: v8 is default, legal capture launches v8 duel, and ?combat=v7 remains available');
 }finally{await browser?.close();server.kill();}
