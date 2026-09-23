@@ -17,6 +17,7 @@ jobs:
       - run: node tests/character-duels.mjs
       - run: node tests/v6-fighters.mjs
       - run: node tests/v6-role-contact.mjs
+      - run: node tests/v7-experience.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -24,7 +25,7 @@ jobs:
           path: artifacts/*.png
           if-no-files-found: ignore
       - name: Package isolated OSU web game
-        run: zip -j artifacts/battle-chess-osu-deploy.zip index.html styles.css battle.js engine.js pieces.js attacks.js characters.js combatants.js duels.js duels-physics.js combat-physics.js castle-controls.js combatants-v6.js duels-v6.js
+        run: zip -j artifacts/battle-chess-osu-deploy.zip index.html handheld.html styles.css experience-v7.css battle.js engine.js computer-v7.js audio-v7.js experience-v7.js pieces.js attacks.js characters.js combatants.js duels.js duels-v7-audio.js duels-physics.js combat-physics.js castle-controls.js combatants-v6.js duels-v6.js
       - uses: actions/upload-artifact@v4
         with:
           name: battle-chess-osu-deploy
