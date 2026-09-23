@@ -1,0 +1,25 @@
+name: Battle Chess v8
+on:
+  push:
+  pull_request:
+jobs:
+  v8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/v8-foundation.mjs
+      - run: node tests/v8-attacks.mjs
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/v8-browser.mjs
+      - run: node tests/v8-preview.mjs
+      - run: node tests/v8-game-integration.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: battle-chess-v8-screenshots
+          path: artifacts/v8-*.png
+          if-no-files-found: ignore
