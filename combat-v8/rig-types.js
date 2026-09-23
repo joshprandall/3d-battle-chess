@@ -79,22 +79,40 @@ export function buildRig(root,materials,definition){
 
 export function poseRig(root,pose={}){
  const r=root?.userData?.rigV8;if(!r)return;
- const gait=pose.gait||0,wind=pose.windup||0,attack=pose.attack||0,follow=pose.follow||0,recover=pose.recover||0,crouch=pose.crouch||0;
+ const gait=(pose.gait||0)+(pose.stepBias||0)*.22,wind=pose.windup||0,attack=pose.attack||0,follow=pose.follow||0,recover=pose.recover||0,crouch=pose.crouch||0;
+ const sway=pose.rootSway||0;
  r.pelvis.position.y=(r.type==='creature'?.67:.72)*r.scale-crouch*.14;
+ r.pelvis.position.z=sway;
+ r.pelvis.rotation.z=(pose.pelvisRoll||0)+(pose.fall||0)*.28;
  r.waist.rotation.y=(pose.turn||0)+(pose.spin||0);
+ r.waist.rotation.z=pose.torsoRoll||0;
  r.torso.rotation.x=(pose.lean||0)-follow*.12+recover*.05;
+ r.torso.rotation.z=(pose.torsoRoll||0)*.45;
  r.head.rotation.x=(pose.head||0)+follow*.10;
+ r.head.rotation.y=-(pose.turn||0)*.18;
  if(r.right?.upper){
-  r.right.upper.rotation.x=-.35-wind*1.05+attack*.82-follow*.22+recover*.28;
-  r.right.upper.rotation.z=-.22-(pose.weaponArc==='wide-sweep'?.55:0);
+  r.right.upper.rotation.x=-.35-wind*1.05+attack*.82-follow*.22+recover*.28+(pose.rightX||0);
+  r.right.upper.rotation.z=-.22-(pose.weaponArc==='wide-sweep'?.55:0)+(pose.rightZ||0);
  }
- if(r.right?.elbow)r.right.elbow.rotation.x=-.35-wind*.45+attack*.28;
- if(r.left?.upper)r.left.upper.rotation.x=-.58+(pose.guard||0)*.55+attack*.14;
- if(r.leftLeg?.upper)r.leftLeg.upper.rotation.x=gait*.48+(pose.brace||0)*.16;
- if(r.rightLeg?.upper)r.rightLeg.upper.rotation.x=-gait*.48-(pose.brace||0)*.20;
- if(r.leftLeg?.knee)r.leftLeg.knee.rotation.x=Math.max(0,-gait)*.62;
- if(r.rightLeg?.knee)r.rightLeg.knee.rotation.x=Math.max(0,gait)*.62;
- if(r.weapon)r.weapon.rotation.x=(pose.weapon||0)-wind*.28+attack*.14;
+ if(r.right?.elbow)r.right.elbow.rotation.x=-.35-wind*.45+attack*.28+(pose.rightElbow||0);
+ if(r.left?.upper){
+  r.left.upper.rotation.x=-.58+(pose.guard||0)*.55+attack*.14+(pose.leftX||0);
+  r.left.upper.rotation.z=(pose.leftZ||0);
+ }
+ if(r.left?.elbow)r.left.elbow.rotation.x=-.42+(pose.leftElbow||0);
+ if(r.leftLeg?.upper)r.leftLeg.upper.rotation.x=gait*.48+(pose.brace||0)*.16+(pose.leftLegX||0);
+ if(r.rightLeg?.upper)r.rightLeg.upper.rotation.x=-gait*.48-(pose.brace||0)*.20+(pose.rightLegX||0);
+ if(r.leftLeg?.knee)r.leftLeg.knee.rotation.x=Math.max(0,-gait)*.62+(pose.leftKnee||0);
+ if(r.rightLeg?.knee)r.rightLeg.knee.rotation.x=Math.max(0,gait)*.62+(pose.rightKnee||0);
+ if(r.weapon){r.weapon.rotation.x=(pose.weapon||0)-wind*.28+attack*.14;r.weapon.rotation.z=pose.weaponRoll||0;}
+ if(r.extraLegs?.length)for(let i=0;i<r.extraLegs.length;i++){
+  const leg=r.extraLegs[i];if(leg?.upper)leg.upper.rotation.x=(i%2?1:-1)*gait*.35+(pose.extraLegX||0);
+  if(leg?.knee)leg.knee.rotation.x=Math.max(0,(i%2?gait:-gait))*.45;
+ }
+ root.traverse(o=>{
+  if(o.userData?.v8Wing)o.rotation.x=(pose.wingBeat||0);
+  if(Number.isInteger(o.userData?.v8Orb)){const a=(o.userData.v8Orb*2.1)+(pose.orbitAngle||0);o.position.y+=Math.sin(a)*.001;}
+ });
 }
 
 export function weaponWorldPoint(root,target=new THREE.Vector3()){
