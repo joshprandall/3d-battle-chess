@@ -12,7 +12,7 @@ const $=s=>document.querySelector(s);
 const sceneEl=$('#scene'),board2d=$('#board2d'),logEl=$('#log'),turnEl=$('#turn'),stateEl=$('#state'),gameShell=$('#gameShell'),game=new ChessGame(),audio=new GameAudio();
 const themes=PALETTES;
 let theme='classic',selected=null,legal=[],busy=false,soundOn=true,aiTimer=null,generation=0,toastTimer=null,scene,camera,renderer,orbit,boardGroup,pieceGroup,fxGroup;
-let viewMode='3d',flipped=false,handCursor={x:4,y:6},fullscreenStarted=false,webglReady=false;
+let viewMode='3d',flipped=false,handCursor={x:4,y:6},keyboardCursor=false,fullscreenStarted=false,webglReady=false;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const query=new URLSearchParams(location.search);
 const handheldDevice=()=>{
@@ -27,7 +27,10 @@ const glyphs={w:{p:'♙',n:'♘',b:'♗',r:'♖',q:'♕',k:'♔'},b:{p:'♟',n:'
 const roleNames={p:'Pawn',n:'Knight',b:'Bishop',r:'Rook',q:'Queen',k:'King'};
 const coord=(x,y)=>String.fromCharCode(97+x)+(8-y);
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-const handheldActive=()=>handheldDevice()&&(forcedHandheld||innerWidth<=1180);
+const handheldActive=()=>handheldDevice();
+const cursorVisible=()=>handheldActive()||keyboardCursor;
+const nativeFullscreenElement=()=>document.fullscreenElement||document.webkitFullscreenElement||null;
+const fullscreenActive=()=>!!nativeFullscreenElement()||gameShell.classList.contains('immersive-fullscreen');
 
 function material(color,glow=0){return new THREE.MeshStandardMaterial({color,roughness:.4,metalness:theme==='cosmic'?.65:.16,emissive:glow,emissiveIntensity:.35})}
 function clearGroup(group){if(!group)return;while(group.children.length){const item=group.children[0];group.remove(item);item.traverse(node=>{node.geometry?.dispose();if(node.material)(Array.isArray(node.material)?node.material:[node.material]).forEach(m=>m.dispose())})}}
@@ -56,7 +59,7 @@ function render2D(){
   if(p)b.classList.add(p.c==='w'?'white-piece':'black-piece');
   if(selected&&selected.x===x&&selected.y===y)b.classList.add('selected');
   if(m)b.classList.add(game.piece(x,y)||game.ep?.x===x&&game.ep?.y===y?'capture':'legal');
-  if(handheldActive()&&handCursor.x===x&&handCursor.y===y)b.classList.add('cursor');
+  if(cursorVisible()&&handCursor.x===x&&handCursor.y===y)b.classList.add('cursor');
   b.dataset.x=x;b.dataset.y=y;b.setAttribute('role','gridcell');
   b.setAttribute('aria-label',p?`${p.c==='w'?'White':'Black'} ${roleNames[p.t]} on ${coord(x,y)}`:coord(x,y));
   b.textContent=p?glyphs[p.c][p.t]:'';
@@ -73,7 +76,7 @@ function drawPieces(){
 function highlight(){
  if(boardGroup)for(const o of boardGroup.children)if(o.userData.square){
   o.material.emissive.setHex(0);o.material.emissiveIntensity=.52;
-  if(handheldActive()&&o.userData.x===handCursor.x&&o.userData.y===handCursor.y)o.material.emissive.setHex(0x38bdf8);
+  if(cursorVisible()&&o.userData.x===handCursor.x&&o.userData.y===handCursor.y)o.material.emissive.setHex(0x38bdf8);
   if(selected&&o.userData.x===selected.x&&o.userData.y===selected.y)o.material.emissive.setHex(0xfbbf24);
   const m=legal.find(m=>m.nx===o.userData.x&&m.ny===o.userData.y);
   if(m)o.material.emissive.setHex(game.piece(m.nx,m.ny)||game.ep?.x===m.nx&&game.ep?.y===m.ny?0xfb7185:0x2dd4bf);
@@ -127,17 +130,37 @@ function queueComputer(){
   if(ticket===generation&&m)await applyMove(m,true);
  },350);
 }
+function syncFullscreenUI(){
+ const active=fullscreenActive();
+ document.body.classList.toggle('immersive-lock',active);
+ $('#fullscreenBtn').textContent=active?'Exit full screen':'Full screen';
+ $('#handFullscreen').textContent=active?'Exit Full':'Full Screen';
+ if(active)requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));
+}
 async function enterFullscreen(){
- if(document.fullscreenElement)return true;
- if(!gameShell?.requestFullscreen){notice('Full screen is not supported by this browser.');return false}
- try{await gameShell.requestFullscreen();return true}catch{notice('Full screen was blocked by the browser.');return false}
+ if(fullscreenActive())return true;
+ const request=gameShell?.requestFullscreen||gameShell?.webkitRequestFullscreen;
+ if(request){
+  try{await request.call(gameShell);syncFullscreenUI();return true}catch{}
+ }
+ // Fallback for browsers that do not expose element fullscreen: remove all page chrome
+ // and fit the game to the visual viewport. Native browser chrome may still be controlled
+ // by the browser/OS, but the game itself is borderless and resolution-responsive.
+ gameShell.classList.add('immersive-fullscreen');syncFullscreenUI();return true;
+}
+async function exitFullscreen(){
+ if(nativeFullscreenElement()){
+  const exit=document.exitFullscreen||document.webkitExitFullscreen;
+  if(exit){try{await exit.call(document)}catch{}}
+ }
+ gameShell.classList.remove('immersive-fullscreen');syncFullscreenUI();
 }
 async function toggleFullscreen(){
- if(document.fullscreenElement){try{await document.exitFullscreen()}catch{}return}
- fullscreenStarted=true;await enterFullscreen();
+ fullscreenStarted=true;
+ if(fullscreenActive())await exitFullscreen();else await enterFullscreen();
 }
 function beginPlayFullscreen(){
- if(fullscreenStarted||innerWidth<=850||document.fullscreenElement)return;
+ if(fullscreenStarted||fullscreenActive())return;
  fullscreenStarted=true;void enterFullscreen();
 }
 function chooseSquare(x,y){
@@ -215,6 +238,30 @@ function nudgeCursor(dx,dy){
  if(flipped){dx*=-1;dy*=-1}
  handCursor={x:clamp(handCursor.x+dx,0,7),y:clamp(handCursor.y+dy,0,7)};highlight();
 }
+function boardKeyboard(e){
+ const tag=e.target?.tagName?.toLowerCase();
+ if(tag==='input'||tag==='select'||tag==='textarea'||e.target?.isContentEditable)return;
+ const key=e.key.toLowerCase();
+ const moveKeys={
+  arrowup:[0,-1],w:[0,-1],
+  arrowdown:[0,1],s:[0,1],
+  arrowleft:[-1,0],a:[-1,0],
+  arrowright:[1,0],d:[1,0]
+ };
+ if(moveKeys[key]){
+  e.preventDefault();keyboardCursor=true;beginPlayFullscreen();void audio.ensure();
+  nudgeCursor(...moveKeys[key]);return;
+ }
+ if(key==='enter'||key===' '){
+  e.preventDefault();keyboardCursor=true;beginPlayFullscreen();void audio.ensure();chooseSquare(handCursor.x,handCursor.y);return;
+ }
+ if(key==='v'){e.preventDefault();beginPlayFullscreen();void audio.ensure();setView(viewMode==='3d'?'2d':'3d');return}
+ if(key==='f'){e.preventDefault();beginPlayFullscreen();flipBoard();return}
+ if(key==='u'){e.preventDefault();undoMove();return}
+ if(key==='m'){e.preventDefault();void toggleSound();return}
+ if(key==='n'){e.preventDefault();newGame();return}
+ if(key==='escape'&&gameShell.classList.contains('immersive-fullscreen')){e.preventDefault();void exitFullscreen();return}
+}
 function connectButtons(){
  $('#newGame').onclick=newGame;$('#undo').onclick=undoMove;$('#flip').onclick=flipBoard;
  $('#viewToggle').onclick=()=>{void audio.ensure();setView(viewMode==='3d'?'2d':'3d')};
@@ -227,8 +274,14 @@ function connectButtons(){
  $('#handSound').onclick=()=>{void toggleSound()};$('#handNew').onclick=newGame;$('#handFullscreen').onclick=()=>{void toggleFullscreen()};
  $('#handSelect').onclick=()=>{beginPlayFullscreen();void audio.ensure();chooseSquare(handCursor.x,handCursor.y)};
  for(const b of document.querySelectorAll('[data-nav]'))b.onclick=()=>{const dir=b.dataset.nav;if(dir==='up')nudgeCursor(0,-1);if(dir==='down')nudgeCursor(0,1);if(dir==='left')nudgeCursor(-1,0);if(dir==='right')nudgeCursor(1,0)};
- document.addEventListener('fullscreenchange',()=>{$('#fullscreenBtn').textContent=document.fullscreenElement?'Exit full screen':'Full screen';$('#handFullscreen').textContent=document.fullscreenElement?'Exit Full':'Full Screen'});
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.fullscreenElement){$('#controls').classList.remove('open');$('#menuBtn').setAttribute('aria-expanded','false')}});
+ document.addEventListener('fullscreenchange',syncFullscreenUI);
+ document.addEventListener('webkitfullscreenchange',syncFullscreenUI);
+ document.addEventListener('keydown',e=>{
+  boardKeyboard(e);
+  if(e.key==='Escape'&&!fullscreenActive()){
+   $('#controls').classList.remove('open');$('#menuBtn').setAttribute('aria-expanded','false');
+  }
+ });
 }
 function init3D(){
  try{
