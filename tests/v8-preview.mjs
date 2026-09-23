@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
 import {chromium} from 'playwright';
+import {mkdir} from 'node:fs/promises';
 
 const server=spawn('python3',['-m','http.server','8771','--bind','127.0.0.1'],{stdio:'ignore'});
 let browser;
@@ -41,5 +42,7 @@ try{
    await delay(180);
  }
  assert.deepEqual(errors,[],'no uncaught errors in v8 combat lab');
+ await mkdir('artifacts',{recursive:true});
+ await page.screenshot({path:'artifacts/v8-combat-lab.png',fullPage:true});
  console.log('PASS v8 preview: isolated lab renders and starts matchups across all five sets');
 }finally{await browser?.close();server.kill();}
