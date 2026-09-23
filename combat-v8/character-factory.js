@@ -40,3 +40,17 @@ export function createV8Character(piece,theme='classic'){
  root.traverse(o=>{o.userData.root=root});
  return root;
 }
+
+
+export function createV8BoardPiece(piece,x,y,theme='classic'){
+ const root=createV8Character(piece,theme),def=root.userData.definition,p=PALETTES[theme]||PALETTES.classic,dark=piece.c==='b';
+ const baseMat=new THREE.MeshStandardMaterial({color:dark?0x1c3142:0x6d6556,roughness:.48,metalness:.28});
+ const edgeMat=new THREE.MeshStandardMaterial({color:dark?0x8aa8bb:p.trim,roughness:.36,metalness:.42,emissive:p.glow,emissiveIntensity:.08});
+ const base=new THREE.Mesh(new THREE.CylinderGeometry(.44,.48,.12,20),baseMat);base.position.y=-.04;base.castShadow=true;base.receiveShadow=true;root.add(base);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.36,.025,6,24),edgeMat);ring.rotation.x=Math.PI/2;ring.position.y=.025;root.add(ring);
+ const scale=({p:.58,n:.60,b:.58,r:.56,q:.57,k:.55})[piece.t]||.58;
+ root.scale.setScalar(scale);root.position.set(x-3.5,.13,y-3.5);
+ root.userData={...root.userData,piece:true,x,y,role:piece.t,side:piece.c,boardCharacterV8:true,definition:def};
+ root.traverse(o=>{o.userData.root=root});
+ return root;
+}
