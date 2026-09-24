@@ -46,7 +46,7 @@
 <label>Battle Set <select id="theme"><option value="classic">Classic</option><option value="arcane">Arcane</option><option value="monsters">Monsters</option><option value="brick">Brick Battle</option><option value="cosmic">Cosmic War</option></select></label>
 <label>Computer strength <select id="difficulty"><option value="1">Recruit</option><option value="2" selected>Warrior</option><option value="3">Champion</option></select></label>
 <button id="newGame" type="button">New Game</button><button id="undo" type="button">Undo</button><button id="flip" type="button">Flip Board</button>
-<button id="viewToggle" type="button" aria-pressed="false">Use 2D board</button>
+<button id="viewToggle" type="button" aria-pressed="false" aria-label="Switch to 2D board" title="Switch to 2D board">2D</button>
 <button id="sound" type="button" aria-pressed="true">Sound on</button>
 <button id="fullscreenBtn" type="button">Full screen</button>
 <button id="exitGame" type="button">Exit to setup</button>
@@ -64,7 +64,7 @@
 <div class="handheld-body">
 <div class="hand-actions">
 <button id="handUndo" type="button">Undo</button><button id="handFlip" type="button">Flip</button>
-<button id="handView" type="button">2D / 3D</button><button id="handSound" type="button">Sound</button>
+<button id="handView" type="button" aria-label="Switch to 2D board" title="Switch to 2D board">2D</button><button id="handSound" type="button">Sound</button>
 <button id="handNew" type="button">New Game</button><button id="handFullscreen" type="button">Full Screen</button>
 </div></div></section>
 <div id="rotateGate" class="rotate-gate" role="status" aria-live="polite"><div><span class="rotate-icon" aria-hidden="true">↻</span><strong>Rotate your device</strong><p>Battle Chess plays in landscape on phones and tablets.</p></div></div>
