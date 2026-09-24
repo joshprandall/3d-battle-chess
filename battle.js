@@ -288,11 +288,30 @@ function setView(mode,announce=true){
  if(wanted==='3d'&&!webglReady){notice('3D graphics are unavailable; staying in 2D.');viewMode='2d'}else viewMode=wanted;
  audio.setMode(viewMode);
  sceneEl.hidden=viewMode!=='3d';board2d.classList.toggle('hidden',viewMode!=='2d');
- $('#viewToggle').textContent=viewMode==='3d'?'Use 2D board':'Use 3D board';$('#viewToggle').setAttribute('aria-pressed',String(viewMode==='2d'));
- $('#handView').textContent=viewMode==='3d'?'Use 2D':'Use 3D';
+
+ // The button always shows the view you can switch TO:
+ // 3D active -> button says 2D; 2D active -> button says 3D.
+ const nextView=viewMode==='3d'?'2d':'3d';
+ const nextLabel=nextView.toUpperCase();
+ const nextDescription=`Switch to ${nextLabel} board`;
+ const viewButton=$('#viewToggle');
+ const handViewButton=$('#handView');
+ if(viewButton){
+  viewButton.textContent=nextLabel;
+  viewButton.setAttribute('aria-pressed',String(viewMode==='2d'));
+  viewButton.setAttribute('aria-label',nextDescription);
+  viewButton.title=nextDescription;
+  viewButton.dataset.targetView=nextView;
+ }
+ if(handViewButton){
+  handViewButton.textContent=nextLabel;
+  handViewButton.setAttribute('aria-label',nextDescription);
+  handViewButton.title=nextDescription;
+  handViewButton.dataset.targetView=nextView;
+ }
  render2D();
  if(viewMode==='3d'&&renderer){const w=Math.max(1,sceneEl.clientWidth),h=Math.max(1,sceneEl.clientHeight);renderer.setSize(w,h,false)}
- if(announce)notice(viewMode==='2d'?'2D board · background music only':'3D board · character and attack sound enabled');
+ if(announce)notice(viewMode==='2d'?'2D board active · tap 3D to return':'3D board active · tap 2D to switch');
 }
 function updateHandheldStatus(){
  const el=$('#handheldStatus');if(!el)return;
@@ -328,13 +347,13 @@ function boardKeyboard(e){
 }
 function connectButtons(){
  $('#newGame').onclick=newGame;$('#undo').onclick=undoMove;$('#flip').onclick=flipBoard;$('#exitGame').onclick=()=>{void exitToSetup()};
- $('#viewToggle').onclick=()=>{void audio.ensure();setView(viewMode==='3d'?'2d':'3d')};
+ $('#viewToggle').onclick=e=>{void audio.ensure();setView(e.currentTarget.dataset.targetView||viewMode==='3d'?'2d':'3d')};
  $('#sound').onclick=()=>{void toggleSound()};$('#fullscreenBtn').onclick=()=>{void toggleFullscreen()};
  $('#theme').onchange=e=>{if(busy){e.target.value=theme;return}theme=e.target.value;audio.setTheme(theme);createBoard();drawPieces()};
  $('#mode').onchange=newGame;
  $('#difficulty').onchange=e=>{const p=computerProfile(Number(e.target.value));notice(`Computer strength: ${p.name} · search depth ${p.depth}`);if($('#mode').value==='ai'&&game.turn==='b'&&!busy)queueComputer()};
  $('#menuBtn').onclick=e=>{const c=$('#controls'),open=c.classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',String(open))};
- $('#handUndo').onclick=undoMove;$('#handFlip').onclick=flipBoard;$('#handView').onclick=()=>{void audio.ensure();setView(viewMode==='3d'?'2d':'3d')};
+ $('#handUndo').onclick=undoMove;$('#handFlip').onclick=flipBoard;$('#handView').onclick=e=>{void audio.ensure();setView(e.currentTarget.dataset.targetView||viewMode==='3d'?'2d':'3d')};
  $('#handSound').onclick=()=>{void toggleSound()};$('#handNew').onclick=newGame;$('#handFullscreen').onclick=()=>{void toggleFullscreen()};
  document.addEventListener('fullscreenchange',syncFullscreenUI);
  document.addEventListener('webkitfullscreenchange',syncFullscreenUI);
