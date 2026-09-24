@@ -347,7 +347,7 @@ function boardKeyboard(e){
 }
 function connectButtons(){
  $('#newGame').onclick=newGame;$('#undo').onclick=undoMove;$('#flip').onclick=flipBoard;$('#exitGame').onclick=()=>{void exitToSetup()};
- $('#viewToggle').onclick=e=>{void audio.ensure();setView(e.currentTarget.dataset.targetView||viewMode==='3d'?'2d':'3d')};
+ $('#viewToggle').onclick=e=>{void audio.ensure();setView(e.currentTarget.dataset.targetView||(viewMode==='3d'?'2d':'3d'))};
  $('#sound').onclick=()=>{void toggleSound()};$('#fullscreenBtn').onclick=()=>{void toggleFullscreen()};
  $('#theme').onchange=e=>{if(busy){e.target.value=theme;return}theme=e.target.value;audio.setTheme(theme);createBoard();drawPieces()};
  $('#mode').onchange=newGame;
