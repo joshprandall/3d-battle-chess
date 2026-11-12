@@ -1,6 +1,6 @@
 # 3D Battle Chess
 
-A standalone, browser-based, 3D chess project created and directed by Joshua Randall.
+I created and directed this standalone browser-based 3D chess project.
 
 ## Play and features
 
